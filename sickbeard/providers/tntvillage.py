@@ -240,11 +240,10 @@ class TNTVillageProvider(generic.TorrentProvider):
 			for x in range(0,y):
 				
 				z=x*20
-				logger.log(u"Page: " + str(x) + " of " + str(y), logger.DEBUG)
                 		if last_page:
 					break	
 
-				logger.log(u"Search Param: " + search_string, logger.DEBUG)	
+				logger.log(u"Page: " + str(x) + " of " + str(y), logger.DEBUG)
 
    	    			if mode != 'RSS':
 					searchURL = (self.urls['search_page'] + '&filter={2}').format(z,self.categories,search_string)
