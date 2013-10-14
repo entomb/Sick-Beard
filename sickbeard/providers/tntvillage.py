@@ -39,7 +39,7 @@ class TNTVillageProvider(generic.TorrentProvider):
             'login' : 'http://forum.tntvillage.scambioetico.org/index.php?act=Login&CODE=01',
             'detail' : 'http://forum.tntvillage.scambioetico.org/index.php?showtopic=%s',
             'search' : 'http://forum.tntvillage.scambioetico.org/?act=allreleases&%s',
-	    'search_page' : 'http://forum.tntvillage.scambioetico.org/?act=allreleases&st=%s&%s',
+	    'search_page' : 'http://forum.tntvillage.scambioetico.org/?act=allreleases&st={0}&{1}',
             'download' : 'http://forum.tntvillage.scambioetico.org/index.php?act=Attach&type=post&id=%s',
             }
 
@@ -228,7 +228,7 @@ class TNTVillageProvider(generic.TorrentProvider):
 
                 if isinstance(search_string, unicode):
                     search_string = unidecode(search_string)
-
+		
 		try: 	
 
 			last_page=0
@@ -244,10 +244,12 @@ class TNTVillageProvider(generic.TorrentProvider):
                 		if last_page:
 					break	
 
+				logger.log(u"Search Param: " + search_string, logger.DEBUG)	
+
    	    			if mode != 'RSS':
-					searchURL = self.urls['search_page'] + '&filter=%s' % (z,self.categories,search_string)
+					searchURL = (self.urls['search_page'] + '&filter={2}').format(z,self.categories,search_string)
         			else:
-					searchURL = self.urls['search_page'] % (z,self.categories)
+					searchURL = self.urls['search_page'].format(z,self.categories)
 
                 		logger.log(u"Search string: " + searchURL, logger.DEBUG)
 
@@ -293,8 +295,6 @@ class TNTVillageProvider(generic.TorrentProvider):
 						title = title.replace(" Versione 720p","").replace(" Versione 1080p","") + self._reverseQuality(self._episodeQuality(result))
 
                         			item = title, download_url, id, seeders, leechers
-                        			logger.log(u"Found result: " + title + "(" + searchURL + ")", logger.DEBUG)
-
                         			logger.log(u"Found result: " + title + "(" + searchURL + ")", logger.DEBUG)
 
 						if not self._is_italian(result) and not sickbeard.TNTVILLAGE_SUBTITLE:
