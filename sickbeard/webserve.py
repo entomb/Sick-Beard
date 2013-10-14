@@ -1313,6 +1313,7 @@ class ConfigProviders:
                       iptorrents_username=None, iptorrents_password=None, iptorrents_freeleech=None,
                       kat_trusted = None, kat_verified = None,
                       scc_username=None, scc_password=None,
+                      tntvillage_username=None, tntvillage_password=None,tntvillage_page=None,tntvillage_fullscan=None,tntvillage_subtitle=None,
                       hdbits_username=None, hdbits_passkey=None,
                       newzbin_username=None, newzbin_password=None,
                       provider_order=None):
@@ -1398,6 +1399,8 @@ class ConfigProviders:
                 sickbeard.KAT = curEnabled
             elif curProvider == 'sceneaccess':
                 sickbeard.SCC = curEnabled
+            elif curProvider == 'tntvillage':
+                sickbeard.TNTVILLAGE = curEnabled
             elif curProvider == 'hdbits':
                 sickbeard.HDBITS = curEnabled               
             else:
@@ -1454,6 +1457,25 @@ class ConfigProviders:
         sickbeard.SCC_USERNAME = scc_username.strip()
         sickbeard.SCC_PASSWORD = scc_password.strip()
         
+
+        sickbeard.TNTVILLAGE_USERNAME = tntvillage_username.strip()
+        sickbeard.TNTVILLAGE_PASSWORD = tntvillage_password.strip()
+        sickbeard.TNTVILLAGE_PAGE = tntvillage_page
+
+        if tntvillage_fullscan == "on":
+            tntvillage_fullscan = 1
+        else:
+            tntvillage_fullscan = 0   
+
+        sickbeard.TNTVILLAGE_FULLSCAN = tntvillage_fullscan
+
+        if tntvillage_subtitle == "on":
+            tntvillage_subtitle = 1
+        else:
+            tntvillage_subtitle = 0   
+
+        sickbeard.TNTVILLAGE_SUBTITLE = tntvillage_subtitle
+
         sickbeard.HDBITS_USERNAME = hdbits_username.strip()
         sickbeard.HDBITS_PASSKEY = hdbits_passkey.strip()
         

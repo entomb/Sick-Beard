@@ -30,7 +30,7 @@ from threading import Lock
 
 # apparently py2exe won't build these unless they're imported somewhere
 from sickbeard import providers, metadata
-from providers import ezrss, tvtorrents, btn, newznab, womble, thepiratebay, torrentleech, kat, iptorrents, omgwtfnzbs, scc, hdbits
+from providers import ezrss, tvtorrents, btn, newznab, womble, thepiratebay, torrentleech, kat, iptorrents, omgwtfnzbs, scc, tntvillage, hdbits
 from sickbeard.config import CheckSection, check_setting_int, check_setting_str, ConfigMigrator
 
 
@@ -200,6 +200,13 @@ KAT_VERIFIED = False
 SCC = False         
 SCC_USERNAME = None 
 SCC_PASSWORD = None 
+
+TNTVILLAGE = False         
+TNTVILLAGE_USERNAME = None 
+TNTVILLAGE_PASSWORD = None 
+TNTVILLAGE_PAGE = None
+TNTVILLAGE_FULLSCAN = False
+TNTVILLAGE_SUBTITLE = False
 
 HDBITS = False
 HDBITS_USERNAME = None
@@ -415,7 +422,8 @@ def initialize(consoleLogging=True):
                 showUpdateScheduler, __INITIALIZED__, LAUNCH_BROWSER, UPDATE_SHOWS_ON_START, SORT_ARTICLE, showList, loadingShowList, \
                 NZBS, NZBS_UID, NZBS_HASH, EZRSS, TVTORRENTS, TVTORRENTS_DIGEST, TVTORRENTS_HASH, BTN, BTN_API_KEY, \
                 THEPIRATEBAY, THEPIRATEBAY_TRUSTED, THEPIRATEBAY_PROXY, THEPIRATEBAY_PROXY_URL, THEPIRATEBAY_BLACKLIST, TORRENTLEECH, TORRENTLEECH_USERNAME, TORRENTLEECH_PASSWORD, \
-                IPTORRENTS, IPTORRENTS_USERNAME, IPTORRENTS_PASSWORD, IPTORRENTS_FREELEECH, KAT, KAT_VERIFIED, SCC, SCC_USERNAME, SCC_PASSWORD, HDBITS, HDBITS_USERNAME, HDBITS_PASSKEY, \
+                IPTORRENTS, IPTORRENTS_USERNAME, IPTORRENTS_PASSWORD, IPTORRENTS_FREELEECH, KAT, KAT_VERIFIED, SCC, SCC_USERNAME, SCC_PASSWORD, TNTVILLAGE, TNTVILLAGE_USERNAME, \
+		TNTVILLAGE_PASSWORD, TNTVILLAGE_PAGE, TNTVILLAGE_FULLSCAN, TNTVILLAGE_SUBTITLE, HDBITS, HDBITS_USERNAME, HDBITS_PASSKEY, \
                 TORRENT_DIR, USENET_RETENTION, SOCKET_TIMEOUT, SEARCH_FREQUENCY, DEFAULT_SEARCH_FREQUENCY, BACKLOG_SEARCH_FREQUENCY, \
                 QUALITY_DEFAULT, FLATTEN_FOLDERS_DEFAULT, SUBTITLES_DEFAULT, STATUS_DEFAULT, \
                 GROWL_NOTIFY_ONSNATCH, GROWL_NOTIFY_ONDOWNLOAD, GROWL_NOTIFY_ONSUBTITLEDOWNLOAD, TWITTER_NOTIFY_ONSNATCH, TWITTER_NOTIFY_ONDOWNLOAD, TWITTER_NOTIFY_ONSUBTITLEDOWNLOAD, \
@@ -620,6 +628,13 @@ def initialize(consoleLogging=True):
         SCC = bool(check_setting_int(CFG, 'SCC', 'scc', 0))
         SCC_USERNAME = check_setting_str(CFG, 'SCC', 'scc_username', '')
         SCC_PASSWORD = check_setting_str(CFG, 'SCC', 'scc_password', '') 
+
+        TNTVILLAGE = bool(check_setting_int(CFG, 'TNTVILLAGE', 'tntvillage', 0))
+        TNTVILLAGE_USERNAME = check_setting_str(CFG, 'TNTVILLAGE', 'tntvillage_username', '')
+        TNTVILLAGE_PASSWORD = check_setting_str(CFG, 'TNTVILLAGE', 'tntvillage_password', '') 
+        TNTVILLAGE_PAGE = check_setting_int(CFG, 'TNTVILLAGE', 'tntvillage_page', 15)
+        TNTVILLAGE_FULLSCAN = bool(check_setting_int(CFG, 'TNTVILLAGE', 'tntvillage_fullscan', 0))
+        TNTVILLAGE_SUBTITLE = bool(check_setting_int(CFG, 'TNTVILLAGE', 'tntvillage_subtitle', 0))
 
         HDBITS = bool(check_setting_int(CFG, 'HDBITS', 'hdbits', 0))
         HDBITS_USERNAME = check_setting_str(CFG, 'HDBITS', 'hdbits_username', '')
@@ -1296,6 +1311,14 @@ def save_config():
     new_config['SCC']['scc'] = int(SCC)
     new_config['SCC']['scc_username'] = SCC_USERNAME
     new_config['SCC']['scc_password'] = SCC_PASSWORD
+
+    new_config['TNTVILLAGE'] = {}
+    new_config['TNTVILLAGE']['tntvillage'] = int(TNTVILLAGE)
+    new_config['TNTVILLAGE']['tntvillage_username'] = TNTVILLAGE_USERNAME
+    new_config['TNTVILLAGE']['tntvillage_password'] = TNTVILLAGE_PASSWORD
+    new_config['TNTVILLAGE']['tntvillage_page'] = int(TNTVILLAGE_PAGE)
+    new_config['TNTVILLAGE']['tntvillage_fullscan'] = int(TNTVILLAGE_FULLSCAN)
+    new_config['TNTVILLAGE']['tntvillage_subtitle'] = int(TNTVILLAGE_SUBTITLE)
 
     new_config['HDBITS'] = {}
     new_config['HDBITS']['hdbits'] = int(HDBITS)
