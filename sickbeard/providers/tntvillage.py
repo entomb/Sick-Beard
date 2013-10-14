@@ -295,6 +295,8 @@ class TNTVillageProvider(generic.TorrentProvider):
                         			item = title, download_url, id, seeders, leechers
                         			logger.log(u"Found result: " + title + "(" + searchURL + ")", logger.DEBUG)
 
+                        			logger.log(u"Found result: " + title + "(" + searchURL + ")", logger.DEBUG)
+
 						if not self._is_italian(result) and not sickbeard.TNTVILLAGE_SUBTITLE:
                         				logger.log(u"Subtitled, Skipped", logger.DEBUG)
 							continue
