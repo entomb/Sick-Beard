@@ -237,6 +237,8 @@ class TNTVillageProvider(generic.TorrentProvider):
 			if fullscan:
 				y=5000		 
 
+			y = int(y)
+
 			for x in range(0,y):
 				
 				z=x*20
@@ -355,8 +357,8 @@ class TNTVillageCache(tvcache.TVCache):
 
         tvcache.TVCache.__init__(self, provider)
 
-        # only poll SCC every 10 minutes max
-        self.minTime = 20
+        # only poll TNTVillage every 30 minutes max
+        self.minTime = 30
 
     def updateCache(self):
 
