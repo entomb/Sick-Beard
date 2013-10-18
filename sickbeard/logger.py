@@ -99,7 +99,7 @@ class SBRotatingLogHandler(object):
             logging.getLogger('imdbpy').addHandler(self.cur_handler)
 
             logging.getLogger('sickbeard').setLevel(DB)
-            logging.getLogger('subliminal').setLevel(logging.DEBUG)
+            logging.getLogger('subliminal').setLevel(logging.WARNING)
             logging.getLogger('imdbpy').setLevel(logging.WARNING)
 
 
@@ -191,7 +191,7 @@ class SBRotatingLogHandler(object):
 
             # check the size and see if we need to rotate
             if self.writes_since_check >= 10:
-                if os.path.isfile(self.log_file) and os.path.getsize(self.log_file) >= LOG_SIZE:
+                if os.path.isfile(self.log_file_path) and os.path.getsize(self.log_file_path) >= LOG_SIZE:
                     self._rotate_logs()
                 self.writes_since_check = 0
             else:
@@ -217,16 +217,12 @@ class SBRotatingLogHandler(object):
                     sb_logger.warning(out_line)
                 elif logLevel == ERROR:
                     sb_logger.error(out_line)
-
                     # add errors to the UI logger
                     classes.ErrorViewer.add(classes.UIError(message))
                 elif logLevel == DB:
                     sb_logger.db(out_line)
-
                 else:
                     sb_logger.log(logLevel, out_line)
-                    subli_logger.log(logLevel, out_line)
-                    imdb_logger.log(logLevel, out_line)
             except ValueError:
                 pass
 

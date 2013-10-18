@@ -46,7 +46,7 @@ from sickbeard import naming
 from sickbeard import scene_exceptions
 from sickbeard import subtitles
 
-from sickbeard.providers import newznab
+from sickbeard.providers import newznab, rsstorrent
 from sickbeard.common import Quality, Overview, statusStrings, qualityPresetStrings
 from sickbeard.common import SNATCHED, SKIPPED, UNAIRED, IGNORED, ARCHIVED, WANTED
 from sickbeard.common import SD, HD720p, HD1080p
@@ -161,6 +161,7 @@ def _getEpisode(show, season, episode):
 ManageMenu = [
     { 'title': 'Backlog Overview',          'path': 'manage/backlogOverview' },
     { 'title': 'Manage Searches',           'path': 'manage/manageSearches'  },
+    { 'title': 'Manage Torrents',           'path': 'manage/manageTorrents'  },    
     { 'title': 'Episode Status Management', 'path': 'manage/episodeStatuses' },
 ]
 if sickbeard.USE_SUBTITLES:
@@ -735,7 +736,32 @@ class Manage:
 
         redirect("/manage")
 
+    @cherrypy.expose
+    def manageTorrents(self):
 
+        t = PageTemplate(file="manage_torrents.tmpl")
+        t.info_download_station = ''
+        t.submenu = ManageMenu
+        
+        if re.search('localhost', sickbeard.TORRENT_HOST):
+        
+            if sickbeard.LOCALHOST_IP == '':
+                t.webui_url = re.sub('localhost', helpers.get_lan_ip(), sickbeard.TORRENT_HOST)
+            else:
+                t.webui_url = re.sub('localhost', sickbeard.LOCALHOST_IP, sickbeard.TORRENT_HOST)
+        else:
+            t.webui_url = sickbeard.TORRENT_HOST
+
+        if sickbeard.TORRENT_METHOD == 'utorrent':
+            t.webui_url = '/'.join(s.strip('/') for s in (t.webui_url, 'gui/'))
+        if sickbeard.TORRENT_METHOD == 'download_station': 
+            if helpers.check_url(t.webui_url + 'download/'):
+                t.webui_url = t.webui_url + 'download/'
+            else:
+                t.info_download_station = '<p>To have a better experience please set the Download Station alias as <code>download</code>, you can check this setting in the Synology DSM <b>Control Panel</b> > <b>Application Portal</b>. Make sure you allow DSM to be embedded with iFrames too in <b>Control Panel</b> > <b>DSM Settings</b> > <b>Security</b>.</p><br/><p>There is more information about this available <a href="https://github.com/mr-orange/Sick-Beard/pull/338">here</a>.</p><br/>' 
+            
+        return _munge(t)
+        
 class History:
 
     @cherrypy.expose
@@ -1302,9 +1328,63 @@ class ConfigProviders:
 
         return '1'
 
+    @cherrypy.expose
+    def canAddTorrentRssProvider(self, name, url):
+
+        if not name:
+            return json.dumps({'error': 'Invalid name specified'})
+
+        providerDict = dict(zip([x.getID() for x in sickbeard.torrentRssProviderList], sickbeard.torrentRssProviderList))
+
+        tempProvider = rsstorrent.TorrentRssProvider(name, url)
+
+        if tempProvider.getID() in providerDict:
+            return json.dumps({'error': 'Exists as '+providerDict[tempProvider.getID()].name})
+        else:
+            (succ, errMsg) = tempProvider.validateRSS()
+            if succ:
+                return json.dumps({'success': tempProvider.getID()})
+            else:
+                return json.dumps({'error': errMsg })
 
     @cherrypy.expose
-    def saveProviders(self, newznab_string='',
+    def saveTorrentRssProvider(self, name, url):
+
+        if not name or not url:
+            return '0'
+
+        providerDict = dict(zip([x.name for x in sickbeard.torrentRssProviderList], sickbeard.torrentRssProviderList))
+
+        if name in providerDict:
+            providerDict[name].name = name
+            providerDict[name].url = url
+
+            return providerDict[name].getID() + '|' + providerDict[name].configStr()
+
+        else:
+
+            newProvider = rsstorrent.TorrentRssProvider(name, url)
+            sickbeard.TorrentRssProviderList.append(newProvider)
+            return newProvider.getID() + '|' + newProvider.configStr()
+
+    @cherrypy.expose
+    def deleteTorrentRssProvider(self, id):
+
+        providerDict = dict(zip([x.getID() for x in sickbeard.torrentRssProviderList], sickbeard.torrentRssProviderList))
+
+        if id not in providerDict:
+            return '0'
+
+        # delete it from the list
+        sickbeard.torrentRssProviderList.remove(providerDict[id])
+
+        if id in sickbeard.PROVIDER_ORDER:
+            sickbeard.PROVIDER_ORDER.remove(id)
+
+        return '1'
+
+    @cherrypy.expose
+    def saveProviders(self, newznab_string='', torrentrss_string='',
                       omgwtfnzbs_username=None, omgwtfnzbs_apikey=None,
                       tvtorrents_digest=None, tvtorrents_hash=None, 
                       btn_api_key=None,
@@ -1360,6 +1440,36 @@ class ConfigProviders:
             if curProvider.getID() not in finishedNames:
                 sickbeard.newznabProviderList.remove(curProvider)
 
+        torrentRssProviderDict = dict(zip([x.getID() for x in sickbeard.torrentRssProviderList], sickbeard.torrentRssProviderList))
+        finishedNames = []
+                    
+        if torrentrss_string:
+            for curTorrentRssProviderStr in torrentrss_string.split('!!!'):
+    
+                if not curTorrentRssProviderStr:
+                    continue
+    
+                curName, curURL = curTorrentRssProviderStr.split('|')
+    
+                newProvider = rsstorrent.TorrentRssProvider(curName, curURL)
+    
+                curID = newProvider.getID()
+    
+                # if it already exists then update it
+                if curID in torrentRssProviderDict:
+                    torrentRssProviderDict[curID].name = curName
+                    torrentRssProviderDict[curID].url = curURL
+                else:
+                    sickbeard.torrentRssProviderList.append(newProvider)
+    
+                finishedNames.append(curID)
+    
+        # delete anything that is missing
+        #logger.log(u"sickbeard.anyRssProviderList =  " + repr(sickbeard.anyRssProviderList))
+        for curProvider in sickbeard.torrentRssProviderList:
+            if curProvider.getID() not in finishedNames:
+                sickbeard.torrentRssProviderList.remove(curProvider)
+
         # do the enable/disable
         for curProviderStr in provider_str_list:
             curProvider, curEnabled = curProviderStr.split(':')
@@ -1403,6 +1513,10 @@ class ConfigProviders:
                 sickbeard.TNTVILLAGE = curEnabled
             elif curProvider == 'hdbits':
                 sickbeard.HDBITS = curEnabled               
+            elif curProvider in newznabProviderDict:
+                newznabProviderDict[curProvider].enabled = bool(curEnabled)
+            elif curProvider in torrentRssProviderDict:
+                torrentRssProviderDict[curProvider].enabled = bool(curEnabled)
             else:
                 logger.log(u"don't know what "+curProvider+" is, skipping")
 
@@ -2102,12 +2216,22 @@ class HomePostProcess:
         return _munge(t)
 
     @cherrypy.expose
-    def processEpisode(self, dir=None, nzbName=None, jobName=None, quiet=None):
+    def processEpisode(self, dir=None, nzbName=None, jobName=None, quiet=None, process_method=None, force=None, is_priority=None):
+
+        if force=="on":
+            force=True
+        else:
+            force=False
+            
+        if is_priority =="on":
+            is_priority = True
+        else:
+            is_priority = False
 
         if not dir:
             redirect("/home/postprocess")
         else:
-            result = processTV.processDir(dir, nzbName)
+            result = processTV.processDir(dir, nzbName, process_method=process_method, force=force, is_priority=is_priority)
             if quiet != None and int(quiet) == 1:
                 return result
 
@@ -3621,15 +3745,15 @@ class WebInterface:
 
         done_show_list = []
         qualList = Quality.DOWNLOADED + Quality.SNATCHED + [ARCHIVED, IGNORED]
-        sql_results1 = myDB.select("SELECT *, 0 as localtime, tv_shows.status as show_status FROM tv_episodes, tv_shows WHERE season != 0 AND airdate >= ? AND airdate < ? AND tv_shows.tvdb_id = tv_episodes.showid AND tv_episodes.status NOT IN ("+','.join(['?']*len(qualList))+")", [today, next_week] + qualList)
-        for cur_result in sql_results1:
+        sql_results = myDB.select("SELECT *, tv_shows.status as show_status FROM tv_episodes, tv_shows WHERE season != 0 AND airdate >= ? AND airdate < ? AND tv_shows.tvdb_id = tv_episodes.showid AND tv_episodes.status NOT IN (" + ','.join(['?'] * len(qualList)) + ")", [today, next_week] + qualList)
+        for cur_result in sql_results:
             done_show_list.append(helpers.tryInt(cur_result["showid"]))
 
-        more_sql_results = myDB.select("SELECT *, tv_shows.status as show_status FROM tv_episodes outer_eps, tv_shows WHERE season != 0 AND showid NOT IN ("+','.join(['?']*len(done_show_list))+") AND tv_shows.tvdb_id = outer_eps.showid AND airdate IN (SELECT airdate FROM tv_episodes inner_eps WHERE inner_eps.showid = outer_eps.showid AND inner_eps.airdate >= ? AND inner_eps.status NOT IN ("+','.join(['?']*len(Quality.DOWNLOADED+Quality.SNATCHED))+") ORDER BY inner_eps.airdate ASC LIMIT 1)", done_show_list + [next_week] + Quality.DOWNLOADED + Quality.SNATCHED)
-        sql_results1 += more_sql_results
+        more_sql_results = myDB.select("SELECT *, tv_shows.status as show_status FROM tv_episodes outer_eps, tv_shows WHERE season != 0 AND showid NOT IN (" + ','.join(['?'] * len(done_show_list)) + ") AND tv_shows.tvdb_id = outer_eps.showid AND airdate = (SELECT airdate FROM tv_episodes inner_eps WHERE inner_eps.season != 0 AND inner_eps.showid = outer_eps.showid AND inner_eps.airdate >= ? ORDER BY inner_eps.airdate ASC LIMIT 1) AND outer_eps.status NOT IN (" + ','.join(['?'] * len(Quality.DOWNLOADED + Quality.SNATCHED)) + ")", done_show_list + [next_week] + Quality.DOWNLOADED + Quality.SNATCHED)
+        sql_results += more_sql_results
 
-        more_sql_results = myDB.select("SELECT *, 0 as localtime, tv_shows.status as show_status FROM tv_episodes, tv_shows WHERE season != 0 AND tv_shows.tvdb_id = tv_episodes.showid AND airdate < ? AND airdate >= ? AND tv_episodes.status = ? AND tv_episodes.status NOT IN ("+','.join(['?']*len(qualList))+")", [today, recently, WANTED] + qualList)
-        sql_results1 += more_sql_results
+        more_sql_results = myDB.select("SELECT *, tv_shows.status as show_status FROM tv_episodes, tv_shows WHERE season != 0 AND tv_shows.tvdb_id = tv_episodes.showid AND airdate < ? AND airdate >= ? AND tv_episodes.status = ? AND tv_episodes.status NOT IN (" + ','.join(['?'] * len(qualList)) + ")", [today, recently, WANTED] + qualList)
+        sql_results += more_sql_results
 
         # sort by localtime
         sorts = {
@@ -3639,13 +3763,13 @@ class WebInterface:
         }
 
         # make a dict out of the sql results
-        sql_results = [dict(row) for row in sql_results1]
+        sql_results = [dict(row) for row in sql_results]
         
         # regex to parse time (12/24 hour format)
         time_regex = re.compile(r"(\d{1,2}):(\d{2,2})( [PA]M)?\b", flags=re.IGNORECASE)
         
         # add localtime to the dict
-        for index, item in enumerate(sql_results1):
+        for index, item in enumerate(sql_results):
             mo = time_regex.search(item['airs'])
             if mo != None and len(mo.groups()) >= 2:
                 try:

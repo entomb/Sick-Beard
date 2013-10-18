@@ -31,6 +31,8 @@ import urllib
 import urllib2
 import zlib
 import hashlib
+import httplib
+import urlparse
 
 from httplib import BadStatusLine
 
@@ -106,7 +108,7 @@ def replaceExtension(filename, newExt):
 
 def isMediaFile(filename):
     # ignore samples
-    if re.search('(^|[\W_])(sample\d*|extra)[\W_]', filename, re.I):
+    if re.search('(^|[\W_])(sample\d*)[\W_]', filename, re.I):
         return False
 
     # ignore MAC OS's retarded "resource fork" files
@@ -114,6 +116,10 @@ def isMediaFile(filename):
         return False
 
     sepFile = filename.rpartition(".")
+    
+    if re.search('extras?$', sepFile[0], re.I):
+        return False
+        
     if sepFile[2].lower() in mediaExtensions:
         return True
     else:
@@ -614,8 +620,9 @@ def rename_ep_file(cur_path, new_path, old_path_length=0):
         cur_file_name, cur_file_ext = os.path.splitext(cur_path)  # @UnusedVariable
     else:
         # approach from the left
-        cur_file_ext = cur_path[old_path_length:]
-    
+        cur_file_ext  = cur_path[old_path_length:]
+        cur_file_name = cur_path[:old_path_length]
+        
     if cur_file_ext[1:] in subtitleExtensions:
         #Extract subtitle language from filename
         sublang = os.path.splitext(cur_file_name)[1][1:]
@@ -925,4 +932,58 @@ def md5_for_file(filename, block_size=2**16):
             f.close()
             return md5.hexdigest()
     except Exception:
+        return None
+    
+def get_lan_ip():
+    """
+    Simple function to get LAN localhost_ip 
+    http://stackoverflow.com/questions/11735821/python-get-localhost-ip
+    """
+
+    if os.name != "nt":
+        import fcntl
+        import struct
+    
+        def get_interface_ip(ifname):
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            return socket.inet_ntoa(fcntl.ioctl(s.fileno(), 0x8915, struct.pack('256s',
+                                    ifname[:15]))[20:24])
+    
+    ip = socket.gethostbyname(socket.gethostname())
+    if ip.startswith("127.") and os.name != "nt":
+        interfaces = [
+            "eth0",
+            "eth1",
+            "eth2",
+            "wlan0",
+            "wlan1",
+            "wifi0",
+            "ath0",
+            "ath1",
+            "ppp0",
+            ]
+        for ifname in interfaces:
+            try:
+                ip = get_interface_ip(ifname)
+                print ifname, ip 
+                break
+            except IOError:
+                pass
+    return ip
+
+def check_url(url):
+    """
+    Check if a URL exists without downloading the whole file.
+    We only check the URL header.
+    """
+    # see also http://stackoverflow.com/questions/2924422
+    # http://stackoverflow.com/questions/1140661
+    good_codes = [httplib.OK, httplib.FOUND, httplib.MOVED_PERMANENTLY]
+
+    host, path = urlparse.urlparse(url)[1:3]    # elems [1] and [2]
+    try:
+        conn = httplib.HTTPConnection(host)
+        conn.request('HEAD', path)
+        return conn.getresponse().status in good_codes
+    except StandardError:
         return None
