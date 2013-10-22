@@ -25,10 +25,10 @@ __all__ = ['ezrss',
            'publichd', 
            'torrentleech',
            'scc',
+           'tntvillage',
            'torrentday',
            'hdbits',
            'iptorrents',
-           'tntvillage',
            'omgwtfnzbs'
            ]
 
