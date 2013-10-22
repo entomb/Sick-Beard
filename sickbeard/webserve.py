@@ -1394,6 +1394,7 @@ class ConfigProviders:
                       kat_trusted = None, kat_verified = None,
                       scc_username=None, scc_password=None,
                       tntvillage_username=None, tntvillage_password=None,tntvillage_page=None,tntvillage_fullscan=None,tntvillage_subtitle=None,
+                      torrentday_username=None, torrentday_password=None, torrentday_freeleech=None,
                       hdbits_username=None, hdbits_passkey=None,
                       newzbin_username=None, newzbin_password=None,
                       provider_order=None):
@@ -1495,8 +1496,6 @@ class ConfigProviders:
                 sickbeard.TORRENTLEECH = curEnabled
             elif curProvider == 'btn':
                 sickbeard.BTN = curEnabled
-            elif curProvider in newznabProviderDict:
-                newznabProviderDict[curProvider].enabled = bool(curEnabled)
             elif curProvider == 'thepiratebay':
                 sickbeard.THEPIRATEBAY = curEnabled
             elif curProvider == 'torrentleech':
@@ -1507,12 +1506,16 @@ class ConfigProviders:
                 sickbeard.OMGWTFNZBS = curEnabled  
             elif curProvider == 'kickasstorrents':
                 sickbeard.KAT = curEnabled
+            elif curProvider == 'publichd':
+                sickbeard.PUBLICHD = curEnabled
             elif curProvider == 'sceneaccess':
                 sickbeard.SCC = curEnabled
             elif curProvider == 'tntvillage':
                 sickbeard.TNTVILLAGE = curEnabled
+            elif curProvider == 'torrentday':
+                sickbeard.TORRENTDAY = curEnabled
             elif curProvider == 'hdbits':
-                sickbeard.HDBITS = curEnabled               
+                sickbeard.HDBITS = curEnabled 
             elif curProvider in newznabProviderDict:
                 newznabProviderDict[curProvider].enabled = bool(curEnabled)
             elif curProvider in torrentRssProviderDict:
@@ -1565,13 +1568,12 @@ class ConfigProviders:
             kat_verified = 1
         else:
             kat_verified = 0   
-            
+
         sickbeard.KAT_VERIFIED = kat_verified
 
         sickbeard.SCC_USERNAME = scc_username.strip()
         sickbeard.SCC_PASSWORD = scc_password.strip()
         
-
         sickbeard.TNTVILLAGE_USERNAME = tntvillage_username.strip()
         sickbeard.TNTVILLAGE_PASSWORD = tntvillage_password.strip()
         sickbeard.TNTVILLAGE_PAGE = tntvillage_page
@@ -1579,16 +1581,26 @@ class ConfigProviders:
         if tntvillage_fullscan == "on":
             tntvillage_fullscan = 1
         else:
-            tntvillage_fullscan = 0   
+            tntvillage_fullscan = 0
 
         sickbeard.TNTVILLAGE_FULLSCAN = tntvillage_fullscan
 
         if tntvillage_subtitle == "on":
             tntvillage_subtitle = 1
         else:
-            tntvillage_subtitle = 0   
+            tntvillage_subtitle = 0
 
         sickbeard.TNTVILLAGE_SUBTITLE = tntvillage_subtitle
+
+        sickbeard.TORRENTDAY_USERNAME = torrentday_username.strip()
+        sickbeard.TORRENTDAY_PASSWORD = torrentday_password.strip()
+
+        if torrentday_freeleech == "on":
+            torrentday_freeleech = 1
+        else:
+            torrentday_freeleech = 0
+
+        sickbeard.TORRENTDAY_FREELEECH = torrentday_freeleech
 
         sickbeard.HDBITS_USERNAME = hdbits_username.strip()
         sickbeard.HDBITS_PASSKEY = hdbits_passkey.strip()
