@@ -119,6 +119,34 @@ class TNTVillageProvider(generic.TorrentProvider):
 
         return [search_string]
 
+    def sanitizeSceneName_not_dotted(self, epname, ezrss=False):
+    	"""
+    	Takes a show name and returns the "scenified" version of it.
+
+    	ezrss: If true the scenified version will follow EZRSS's cracksmoker rules as best as possible
+
+    	Returns: A string containing the scene version of the show name given.
+    	"""
+
+    	if not ezrss:
+        	bad_chars = u",:()'!?\u2019"
+    	# ezrss leaves : and ! in their show names as far as I can tell
+   	else:
+        	bad_chars = u",()'?\u2019"
+
+    	# strip out any bad chars
+    	for x in bad_chars:
+        	epname = epname.replace(x, "")
+
+    	# tidy up stuff that doesn't belong in scene names
+    	epname = epname.replace("- ", "").replace("&", "and").replace('/', '.')
+    	epname = re.sub("\.\.*", ".", epname)
+
+    	if epname.endswith('.'):
+        	epname = epname[:-1]
+
+    	return epname
+
     def _get_episode_search_strings(self, ep_obj):
 
         search_string = {'Episode': []}
@@ -128,14 +156,54 @@ class TNTVillageProvider(generic.TorrentProvider):
 
         if ep_obj.show.air_by_date:
             for show_name in set(show_name_helpers.allPossibleShowNames(ep_obj.show)):
+
                 ep_string = show_name_helpers.sanitizeSceneName(show_name) +' '+ str(ep_obj.airdate)
-                search_string['Episode'].append(ep_string)
+		if not search_string['Episode']:
+                	search_string['Episode'].append(ep_string)
+
+		found = 0
+		for ep_name in search_string['Episode']:
+			if ep_string == ep_name:
+				found = 1	
+				continue
+		if not found:
+             		search_string['Episode'].append(ep_string)
+
+                ep_string = self.sanitizeSceneName_not_dotted(show_name) +' '+ str(ep_obj.airdate)
+
+		found = 0
+		for ep_name in search_string['Episode']:
+			if ep_string == ep_name:
+				found = 1	
+				continue
+		if not found:
+                	search_string['Episode'].append(ep_string)
         else:
             for show_name in set(show_name_helpers.allPossibleShowNames(ep_obj.show)):
+
                 ep_string = show_name_helpers.sanitizeSceneName(show_name) +' '+ \
                 sickbeard.config.naming_ep_type[2] % {'seasonnumber': ep_obj.season, 'episodenumber': ep_obj.episode}
+		if not search_string['Episode']:
+                	search_string['Episode'].append(ep_string)
 
-                search_string['Episode'].append(ep_string)
+		found = 0
+		for ep_name in search_string['Episode']:
+			if ep_string == ep_name:
+				found = 1	
+				continue
+		if not found:
+             		search_string['Episode'].append(ep_string)
+
+                ep_string = self.sanitizeSceneName_not_dotted(show_name) +' '+ \
+                sickbeard.config.naming_ep_type[2] % {'seasonnumber': ep_obj.season, 'episodenumber': ep_obj.episode}
+
+		found = 0
+		for ep_name in search_string['Episode']:
+			if ep_string == ep_name:
+				found = 1	
+				continue
+		if not found:
+                	search_string['Episode'].append(ep_string)
 
         return [search_string]
 
@@ -271,6 +339,8 @@ class TNTVillageProvider(generic.TorrentProvider):
                         			logger.log(u"The Data returned from " + self.name + " do not contains any torrent", logger.DEBUG)
 						last_page=1
                         			continue
+					if a < 42:
+						 last_page=1
 
                     			for result in torrent_table.find_all('tr')[2:]:
 
