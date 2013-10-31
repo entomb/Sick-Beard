@@ -249,16 +249,23 @@ class TNTVillageProvider(generic.TorrentProvider):
 	  except Exception, e:
           	logger.log(u"Failed parsing " + self.name + " Traceback: "  + traceback.format_exc(), logger.ERROR)
 
+	name = name + " " + (torrent_rows.find_all('td'))[1].get_text()
+	logger.log(u"full quality string:" + name, logger.DEBUG)
+
         checkName = lambda list, func: func([re.search(x, name, re.I) for x in list])
 
-        if checkName(["(tv|sat)","(xvid|h264|divx)"], all) and not checkName(["(720|1080)[pi]"], all):
+        if checkName(["(tv|sat|hdtv|hdtvrip|hdtvmux|webdl|webrip|web-dl|webdlmux|dlrip|dlmux|dtt|bdmux)","(xvid|h264|divx)"], all) and not checkName(["(720|1080)[pi]"], all):
             return Quality.SDTV
-        elif checkName(["(xvid|divx|h264)"], any) and not checkName(["(720|1080)[pi]"], all) and not checkName(["(sat|tv)"], all) and not checkName(["BD"], all) and not checkName(["fullHD"], all):
+        elif checkName(["(xvid|divx|h264)"], any) and checkName(["(dvdrip|dvdmux|dvd)"], any) and not checkName(["(720|1080)[pi]"], all) and not checkName(["(sat|tv)"], all) and not checkName(["BD"], all) and not checkName(["fullHD"], all):
             return Quality.SDDVD
-        elif checkName(["720p", "(h264|xvid|divx)"], all) and not checkName(["BD"], all):
+        elif checkName(["720p", "(h264|xvid|divx)"], all) and not checkName(["BD"], all) and not checkName(["webdl|webrip|web-dl|webdlmux|hdtvmux|sat|dlmux"], all):
             return Quality.HDTV
-        elif checkName(["fullHD", "(h264|xvid|divx)"], all) or checkName(["fullHD"], all) and not checkName(["BD"], all):
+        elif checkName(["720p", "(h264|xvid|divx)"], all) and not checkName(["BD"], all) and checkName(["webdl|webrip|web-dl|webdlmux|hdtvmux|sat|dlmux"], all):
+            return Quality.HDWEBDL
+        elif checkName(["fullHD", "(h264|xvid|divx)"], all) or checkName(["fullHD"], all) and not checkName(["BD"], all) and not checkName(["webdl|webrip|web-dl|webdlmux|hdtvmux|sat|dlmux"], all):
             return Quality.FULLHDTV
+        elif checkName(["fullHD", "(h264|xvid|divx)"], all) or checkName(["fullHD"], all) and not checkName(["BD"], all) and checkName(["webdl|webrip|web-dl|webdlmux|hdtvmux|sat|dlmux"], all):
+            return Quality.FULLHDWEBDL
         elif checkName(["BD", "720p", "(h264|xvid|divx)"], all) or  checkName(["BD", "h264|xvid|divx"], all) and not checkName(["fullHD"], all):
             return Quality.HDBLURAY
         elif checkName(["BD", "fullHd", "(h264|xvid|divx)"], all):
@@ -428,7 +435,7 @@ class TNTVillageCache(tvcache.TVCache):
         tvcache.TVCache.__init__(self, provider)
 
         # only poll TNTVillage every 30 minutes max
-        self.minTime = 30
+        self.minTime = 5
 
     def updateCache(self):
 
