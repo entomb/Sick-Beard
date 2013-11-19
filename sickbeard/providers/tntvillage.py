@@ -72,6 +72,7 @@ class TNTVillageProvider(generic.TorrentProvider):
 
         login_params = {'UserName': sickbeard.TNTVILLAGE_USERNAME,
                         'PassWord': sickbeard.TNTVILLAGE_PASSWORD,
+                        'CookieDate': 1,
                         'submit': 'Connettiti al Forum',
                         }
 
