@@ -2366,10 +2366,10 @@ class NewHomeAddShows:
         result = tvdb_api.Tvdb().config['valid_languages']
 
         # Make sure list is sorted alphabetically but 'en' is in front
-        if 'en' in result:
-            del result[result.index('en')]
+        if 'it' in result:
+            del result[result.index('it')]
         result.sort()
-        result.insert(0, 'en')
+        result.insert(0, 'it')
 
         return json.dumps({'results': result})
 
@@ -2378,9 +2378,9 @@ class NewHomeAddShows:
         return helpers.sanitizeFileName(name)
 
     @cherrypy.expose
-    def searchTVDBForShowName(self, name, lang="en"):
+    def searchTVDBForShowName(self, name, lang="it"):
         if not lang or lang == 'null':
-                lang = "en"
+                lang = "it"
 
         baseURL = "http://thetvdb.com/api/GetSeries.php?"
         nameUTF8 = name.encode('utf-8')
