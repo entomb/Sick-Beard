@@ -672,10 +672,10 @@ def initialize(consoleLogging=True):
         TNTVILLAGE = bool(check_setting_int(CFG, 'TNTVILLAGE', 'tntvillage', 0))
         TNTVILLAGE_USERNAME = check_setting_str(CFG, 'TNTVILLAGE', 'tntvillage_username', '')
         TNTVILLAGE_PASSWORD = check_setting_str(CFG, 'TNTVILLAGE', 'tntvillage_password', '')
-        TNTVILLAGE_PAGE = check_setting_int(CFG, 'TNTVILLAGE', 'tntvillage_page', 15)
+        TNTVILLAGE_PAGE = check_setting_int(CFG, 'TNTVILLAGE', 'tntvillage_page', 5)
         TNTVILLAGE_FULLSCAN = bool(check_setting_int(CFG, 'TNTVILLAGE', 'tntvillage_fullscan', 0))
         TNTVILLAGE_SUBTITLE = bool(check_setting_int(CFG, 'TNTVILLAGE', 'tntvillage_subtitle', 0))
-        TNTVILLAGE_OPTIONS = bool(check_setting_int(CFG, 'TNTVILLAGE', 'tntvillage_options', 0))
+        TNTVILLAGE_OPTIONS = bool(check_setting_str(CFG, 'TNTVILLAGE', 'tntvillage_options', ''))
 
         TORRENTDAY = bool(check_setting_int(CFG, 'TORRENTDAY', 'torrentday', 0))
         TORRENTDAY_USERNAME = check_setting_str(CFG, 'TORRENTDAY', 'torrentday_username', '')
