@@ -1398,7 +1398,7 @@ def save_config():
     new_config['TNTVILLAGE']['tntvillage_page'] = int(TNTVILLAGE_PAGE)
     new_config['TNTVILLAGE']['tntvillage_fullscan'] = int(TNTVILLAGE_FULLSCAN)
     new_config['TNTVILLAGE']['tntvillage_subtitle'] = int(TNTVILLAGE_SUBTITLE)
-    new_config['TNTVILLAGE']['tntvillage_options'] = int(TNTVILLAGE_OPTIONS)
+    new_config['TNTVILLAGE']['tntvillage_options'] = TNTVILLAGE_OPTIONS
 
     new_config['TORRENTDAY'] = {}
     new_config['TORRENTDAY']['torrentday'] = int(TORRENTDAY)
