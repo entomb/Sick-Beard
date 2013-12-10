@@ -152,6 +152,8 @@ def snatchEpisode(result, endStatus=SNATCHED):
     for curEpObj in result.episodes:
         with curEpObj.lock:
             curEpObj.status = Quality.compositeStatus(endStatus, result.quality)
+	    if result.resultType == "torrent":
+	    	curEpObj.torrent_hash = client._get_torrent_hash(result)
             curEpObj.saveToDB()
 
         if curEpObj.status not in Quality.DOWNLOADED:

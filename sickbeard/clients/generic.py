@@ -134,6 +134,13 @@ class GenericClient(object):
             torrent_hash = sha1(bencode(info)).hexdigest()
 
         return torrent_hash
+
+    def remove_torrent_downloaded(self,hash):
+        """
+        This should be overridden should return the True/False from the client 
+        when a torrent is set with pause
+        """
+        return True
         
     def sendTORRENT(self, result):
         

@@ -1132,6 +1132,7 @@ class TVEpisode(object):
         self._file_size = 0
         self._release_name = ''
         self._is_proper = False
+        self._torrent_hash = ''
 
         # setting any of the above sets the dirty flag
         self.dirty = True
@@ -1163,6 +1164,7 @@ class TVEpisode(object):
     file_size = property(lambda self: self._file_size, dirty_setter("_file_size"))
     release_name = property(lambda self: self._release_name, dirty_setter("_release_name"))
     is_proper = property(lambda self: self._is_proper, dirty_setter("_is_proper"))
+    torrent_hash = property(lambda self: self._torrent_hash, dirty_setter("_torrent_hash"))
 
     def _set_location(self, new_location):
         logger.log(u"Setter sets location to " + new_location, logger.DEBUG)
@@ -1339,6 +1341,9 @@ class TVEpisode(object):
 
             if sqlResults[0]["is_proper"]:
                 self.is_proper = int(sqlResults[0]["is_proper"])
+
+            if sqlResults[0]["torrent_hash"]:
+                self.torrent_hash = sqlResults[0]["torrent_hash"]
 
             self.dirty = False
             return True
@@ -1625,7 +1630,8 @@ class TVEpisode(object):
                         "location": self.location,
                         "file_size": self.file_size,
                         "release_name": self.release_name,
-                        "is_proper": self.is_proper}
+                        "is_proper": self.is_proper,
+			"torrent_hash": self.torrent_hash}
         controlValueDict = {"showid": self.show.tvdbid,
                             "season": self.season,
                             "episode": self.episode}
