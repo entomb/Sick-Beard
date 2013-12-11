@@ -309,11 +309,6 @@ class TNTVillageProvider(generic.TorrentProvider):
 
 			last_page=0
 			y=sickbeard.TNTVILLAGE_PAGE
-			fullscan=sickbeard.TNTVILLAGE_FULLSCAN	
-			if fullscan:
-				y=5000		 
-
-			y = int(y)
 
 			for x in range(0,y):
 				
@@ -396,8 +391,6 @@ class TNTVillageProvider(generic.TorrentProvider):
 
             	results += items[mode]  
 
-		sickbeard.TNTVILLAGE_FULLSCAN = False
-                
         return results
 
     def _get_title_and_url(self, item):
