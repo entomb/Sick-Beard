@@ -60,7 +60,6 @@ class TraktChecker():
 		num_op_ep=''
 
 		last_per_season = TraktCall("show/seasons.json/%API%/" + str(cur_result["tvdb_id"]), sickbeard.TRAKT_API, sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_PASSWORD)
-#		collected = TraktCall("user/library/shows/collection.json/%API%/" + sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_API, sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_PASSWORD)
 		watched = TraktCall("user/library/shows/watched.json/%API%/" + sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_API, sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_PASSWORD)
         	if last_per_season is None or watched is None:
             		logger.log(u"Could not connect to trakt service, aborting watchlist update", logger.ERROR)
@@ -74,15 +73,17 @@ class TraktChecker():
 		last_episode = ''
 
 		logger.log(u"TVDB_ID: " + str(tvdb_id) + ", Show: " + show_name + ", Season: " + str(sn_sb) + ", Episode: " + str(ep_sb), logger.DEBUG)
-#		logger.log(u"last_per_season_response: " + str(last_per_season), logger.DEBUG)
-#		logger.log(u"Watched_response: " + str(watched), logger.DEBUG)
 
 		if tvdb_id not in (show["tvdb_id"] for show in watched):
 			logger.log(u"Show not founded in Watched list", logger.DEBUG)
-			sn_sb = 1
-			ep_sb = 1
-			num_of_ep = num_of_download - ep_sb
-			episode = 0
+			if sn_sb >= 1 and ep_sb > num_of_download:
+				logger.log(u"First five episode already downloaded", logger.DEBUG)
+				continue
+			else:
+				sn_sb = 1
+				ep_sb = 1
+				num_of_ep = num_of_download - ep_sb
+				episode = 0
 		else:
 			logger.log(u"Show founded in Watched list", logger.DEBUG)
 
@@ -98,7 +99,7 @@ class TraktChecker():
 
 			last_season = [last_x_season_wc for last_x_season_wc in last_per_season if last_x_season_wc['season'] == season]
 			last_episode = last_season[0]['episodes']
-			logger.log(u"Last episode for the season " + last_season " is " + str(last_episode), logger.DEBUG)
+			logger.log(u"Last episode for the season " + last_season + " is " + str(last_episode), logger.DEBUG)
 
 			if (episode == last_episode):
 				num_of_ep = num_of_download - ep_sb
