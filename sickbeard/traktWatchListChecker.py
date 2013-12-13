@@ -99,7 +99,7 @@ class TraktChecker():
 
 			last_season = [last_x_season_wc for last_x_season_wc in last_per_season if last_x_season_wc['season'] == season]
 			last_episode = last_season[0]['episodes']
-			logger.log(u"Last episode for the season " + last_season + " is " + str(last_episode), logger.DEBUG)
+			logger.log(u"Last episode for the season " + str(last_season) + " is " + str(last_episode), logger.DEBUG)
 
 			if (episode == last_episode):
 				num_of_ep = num_of_download - ep_sb
