@@ -67,12 +67,13 @@ class TraktChecker():
             		return
 
 		tvdb_id = str(cur_result["tvdb_id"])
+		show_name = (cur_result["show_name"])
 		sn_sb = cur_result["season"]
 		ep_sb = cur_result["episode"]
 
 		last_episode = ''
 
-		logger.log(u"TVDB_ID: " + str(tvdb_id) + ", Season: " + str(sn_sb) + ", Episode: " + str(ep_sb), logger.DEBUG)
+		logger.log(u"TVDB_ID: " + str(tvdb_id) + ", Show: " + show_name + ", Season: " + str(sn_sb) + ", Episode: " + str(ep_sb), logger.DEBUG)
 #		logger.log(u"last_per_season_response: " + str(last_per_season), logger.DEBUG)
 #		logger.log(u"Watched_response: " + str(watched), logger.DEBUG)
 
@@ -89,8 +90,7 @@ class TraktChecker():
 			
 			season = show_watched[0]['seasons'][0]['season']
 			episode = show_watched[0]['seasons'][0]['episodes'][-1]
-			logger.log(u"season: " + str(season), logger.DEBUG)
-			logger.log(u"last episode seen: " + str(episode), logger.DEBUG)
+			logger.log(u"Last watched, Season: " + str(season) + " - Episode: " + str(episode), logger.DEBUG)
 
 			if (sn_sb < season):
 				logger.log(u"TV Show already watched", logger.DEBUG)
@@ -98,7 +98,7 @@ class TraktChecker():
 
 			last_season = [last_x_season_wc for last_x_season_wc in last_per_season if last_x_season_wc['season'] == season]
 			last_episode = last_season[0]['episodes']
-			logger.log(u"last per season: " + str(last_episode), logger.DEBUG)
+			logger.log(u"Last episode for the season " + last_season " is " + str(last_episode), logger.DEBUG)
 
 			if (episode == last_episode):
 				num_of_ep = num_of_download - ep_sb
@@ -107,7 +107,7 @@ class TraktChecker():
 				if sn_sb > season:
 					num_of_ep = num_of_ep - last_episode
 
-		logger.log(u"Num of Ep to Download: " + str(num_of_ep), logger.DEBUG)
+		logger.log(u"Number of Episode to Download: " + str(num_of_ep), logger.DEBUG)
 		newShow = helpers.findCertainShow(sickbeard.showList, int(tvdb_id))
 		for x in range(0,num_of_ep+1):
 			logger.log(u"Episode to be wanted: " +  str(ep_sb) + "+" + str(x), logger.DEBUG)
