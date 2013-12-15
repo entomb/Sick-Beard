@@ -104,9 +104,9 @@ class TraktChecker():
 			if (episode == last_episode):
 				num_of_ep = num_of_download - ep_sb
 			else:
-				num_of_ep = num_of_download - (ep_sb - episode)
+				num_of_ep = num_of_download - (ep_sb - int(episode))
 				if sn_sb > season:
-					num_of_ep = num_of_ep - last_episode
+					num_of_ep = num_of_ep - int(last_episode)
 
 		logger.log(u"Number of Episode to Download: " + str(num_of_ep), logger.DEBUG)
 		newShow = helpers.findCertainShow(sickbeard.showList, int(tvdb_id))
