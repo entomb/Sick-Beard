@@ -112,12 +112,12 @@ class TraktChecker():
 		newShow = helpers.findCertainShow(sickbeard.showList, int(tvdb_id))
 		for x in range(0,num_of_ep+1):
 			logger.log(u"Episode to be wanted: " +  str(ep_sb) + "+" + str(x), logger.DEBUG)
-			if (sn_ep*100 + ep_sb+x) <= (last_season*100 + last_episode) or last_episode == None:
-				if (sn_ep*100 + ep_sb+x) > (season*100 + episode):
-					logger.log(u"Changed episode to wanted: S" + sn_ep + "E"+  str(ep_sb) + "+" + str(x), logger.DEBUG)
+			if (sn_sb*100 + ep_sb+x) <= (last_season*100 + last_episode) or last_episode == None:
+				if (sn_sb*100 + ep_sb+x) > (season*100 + episode):
+					logger.log(u"Changed episode to wanted: S" + sn_sb + "E"+  str(ep_sb) + "+" + str(x), logger.DEBUG)
        	        			self.setEpisodeToWanted(newShow, sn_sb, ep_sb+x)
 				else:
-					logger.log(u"Changed episode to archived: S" + sn_ep + "E"+  str(ep_sb) + "+" + str(x), logger.DEBUG)
+					logger.log(u"Changed episode to archived: S" + sn_sb + "E"+  str(ep_sb) + "+" + str(x), logger.DEBUG)
        	        			self.setEpisodeToArchived(newShow, sn_sb, ep_sb+x)
 			else:
               			self.setEpisodeToWanted(newShow, sn_sb+1, ep_sb+x-last_episode)
