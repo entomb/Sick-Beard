@@ -78,7 +78,7 @@ class TraktChecker():
 		if tvdb_id not in (show["tvdb_id"] for show in watched):
 			logger.log(u"Show not founded in Watched list", logger.DEBUG)
 			if sn_sb >= 1 and ep_sb > num_of_download:
-				logger.log(u"First " + num_of_download + " episode already downloaded", logger.DEBUG)
+				logger.log(u"First " + str(num_of_download) + " episode already downloaded", logger.DEBUG)
 				continue
 			else:
 				sn_sb = 1
