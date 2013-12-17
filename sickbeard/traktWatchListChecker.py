@@ -70,14 +70,15 @@ class TraktChecker():
 		sn_sb = cur_result["season"]
 		ep_sb = cur_result["episode"]
 
-		last_episode = ''
+		last_episode = 0
+		last_season = 0
 
-		logger.log(u"TVDB_ID: " + str(tvdb_id) + ", Show: " + show_name + ", Season: " + str(sn_sb) + ", Episode: " + str(ep_sb), logger.DEBUG)
+		logger.log(u"TVDB_ID: " + str(tvdb_id) + ", Show: " + show_name + "- First skipped Episode: Season " + str(sn_sb) + ", Episode " + str(ep_sb), logger.DEBUG)
 
 		if tvdb_id not in (show["tvdb_id"] for show in watched):
 			logger.log(u"Show not founded in Watched list", logger.DEBUG)
 			if sn_sb >= 1 and ep_sb > num_of_download:
-				logger.log(u"First five episode already downloaded", logger.DEBUG)
+				logger.log(u"First " + num_of_download + " episode already downloaded", logger.DEBUG)
 				continue
 			else:
 				sn_sb = 1
@@ -90,6 +91,7 @@ class TraktChecker():
 			show_watched = [show for show in watched if show["tvdb_id"] == tvdb_id]
 			
 			season = show_watched[0]['seasons'][0]['season']
+			episode = show_watched[0]['seasons'][0]['episodes'][-1]
 			episode = show_watched[0]['seasons'][0]['episodes'][-1]
 			logger.log(u"Last watched, Season: " + str(season) + " - Episode: " + str(episode), logger.DEBUG)
 
@@ -112,7 +114,7 @@ class TraktChecker():
 		newShow = helpers.findCertainShow(sickbeard.showList, int(tvdb_id))
 		for x in range(0,num_of_ep+1):
 			logger.log(u"Episode to be wanted: " +  str(ep_sb) + "+" + str(x), logger.DEBUG)
-			if (sn_sb*100+ep_sb+x) <= (int(last_season[0]['episodes'])*100+int(last_episode)) or last_episode == None:
+			if last_episode == None or (sn_sb*100+ep_sb+x) <= (int(last_season[0]['episodes'])*100+int(last_episode)): 
 				if (sn_sb*100+ep_sb+x) > (season*100+episode):
 					logger.log(u"Changed episode to wanted: S" + str(sn_sb) + "E"+  str(ep_sb) + "+" + str(x), logger.DEBUG)
        	        			self.setEpisodeToWanted(newShow, sn_sb, ep_sb+x)
@@ -248,5 +250,4 @@ class TraktChecker():
             sickbeard.searchQueueScheduler.action.add_item(cur_backlog_queue_item)
             logger.log(u"Starting backlog for " + show.name + " season " + str(segment[1]) + " because some eps were set to wanted")
             self.todoBacklog.remove(segment)
-
 
