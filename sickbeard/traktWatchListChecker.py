@@ -40,9 +40,9 @@ class TraktChecker():
             if len(sickbeard.ROOT_DIRS.split('|')) < 2:
                 logger.log(u"No default root directory", logger.ERROR)
                 return
+            self.updateWantedList()
             self.updateShows()
             self.updateEpisodes()
-            self.updateWantedList()
 
     def updateWantedList(self):
 
@@ -57,7 +57,9 @@ class TraktChecker():
 
 	for cur_result in results:
 
-		num_op_ep=''
+		num_op_ep=0
+		season = 0
+		episode = 0
 
 		last_per_season = TraktCall("show/seasons.json/%API%/" + str(cur_result["tvdb_id"]), sickbeard.TRAKT_API, sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_PASSWORD)
 		watched = TraktCall("user/library/shows/watched.json/%API%/" + sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_API, sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_PASSWORD)
@@ -70,12 +72,7 @@ class TraktChecker():
 		sn_sb = cur_result["season"]
 		ep_sb = cur_result["episode"]
 
-		last_episode = 0
-		last_season = 0
-		season = 0
-		episode = 0
-
-		logger.log(u"TVDB_ID: " + str(tvdb_id) + ", Show: " + show_name + "- First skipped Episode: Season " + str(sn_sb) + ", Episode " + str(ep_sb), logger.DEBUG)
+		logger.log(u"TVDB_ID: " + str(tvdb_id) + ", Show: " + show_name + " - First skipped Episode: Season " + str(sn_sb) + ", Episode " + str(ep_sb), logger.DEBUG)
 
 		if tvdb_id not in (show["tvdb_id"] for show in watched):
 			logger.log(u"Show not founded in Watched list", logger.DEBUG)
@@ -85,7 +82,7 @@ class TraktChecker():
 			else:
 				sn_sb = 1
 				ep_sb = 1
-				num_of_ep = num_of_download - ep_sb
+				num_of_ep = num_of_download
 				episode = 0
 		else:
 			logger.log(u"Show founded in Watched list", logger.DEBUG)
@@ -96,35 +93,32 @@ class TraktChecker():
 			episode = show_watched[0]['seasons'][0]['episodes'][-1]
 			logger.log(u"Last watched, Season: " + str(season) + " - Episode: " + str(episode), logger.DEBUG)
 
-			if ((sn_sb*100+ep_sb) == (season*100+episode)):
-				logger.log(u"TV Show already watched", logger.DEBUG)
-				continue
-
-			last_season = [last_x_season_wc for last_x_season_wc in last_per_season if last_x_season_wc['season'] == season]
-			last_episode = last_season[0]['episodes']
-			logger.log(u"Last episode for the season " + str(last_season[0]['season']) + " is " + str(last_episode), logger.DEBUG)
-
-			if (episode == last_episode):
-				num_of_ep = num_of_download - ep_sb
-			else:
-				num_of_ep = num_of_download - (ep_sb - int(episode))
-				if sn_sb > season:
-					num_of_ep = num_of_ep - int(last_episode)
+			num_of_ep = num_of_download - (self._num_ep_for_season(last_per_season, sn_sb, ep_sb) - self._num_ep_for_season(last_per_season, season, episode)) + 1
 
 		logger.log(u"Number of Episode to Download: " + str(num_of_ep), logger.DEBUG)
 		newShow = helpers.findCertainShow(sickbeard.showList, int(tvdb_id))
-		for x in range(0,num_of_ep+1):
-			logger.log(u"Episode to be wanted: " +  str(ep_sb) + "+" + str(x), logger.DEBUG)
-			if last_episode == 0 or (sn_sb*100+ep_sb+x) <= (int(last_season[0]['episodes'])*100+int(last_episode)): 
-				if (sn_sb*100+ep_sb+x) > (season*100+episode):
-					logger.log(u"Changed episode to wanted: S" + str(sn_sb) + "E"+  str(ep_sb) + "+" + str(x), logger.DEBUG)
-       	        			self.setEpisodeToWanted(newShow, sn_sb, ep_sb+x)
+
+		s = sn_sb
+		e = ep_sb
+
+		for x in range(0,num_of_ep):
+
+			last_s = [last_x_s for last_x_s in last_per_season if last_x_s['season'] == s]
+			if episode == 0 or (s*100+e) <= (int(last_s[0]['season'])*100+int(last_s[0]['episodes'])): 
+				if (s*100+e) > (season*100+episode):
+					logger.log(u"Changed episode to wanted: S" + str(s) + "E"+  str(e), logger.DEBUG)
+       	        			self.setEpisodeToWanted(newShow, s, e)
 				else:
-					logger.log(u"Changed episode to archived: S" + str(sn_sb) + "E"+  str(ep_sb) + "+" + str(x), logger.DEBUG)
-       	        			self.setEpisodeToArchived(newShow, sn_sb, ep_sb+x)
+					logger.log(u"Changed episode to archived: S" + str(s) + "E"+  str(e), logger.DEBUG)
+       	        			self.setEpisodeToArchived(newShow, s, e)
+
+			if (s*100+e) == (int(last_s[0]['season'])*100+int(last_s[0]['episodes'])):
+				s = s + 1
+				e = 1
 			else:
-              			self.setEpisodeToWanted(newShow, sn_sb+1, ep_sb+x-last_episode)
-                   	self.startBacklog(newShow)
+				e = e + 1
+				
+                self.startBacklog(newShow)
 
     def updateShows(self):
         logger.log(u"Starting trakt show watchlist check", logger.DEBUG)
@@ -252,3 +246,24 @@ class TraktChecker():
             logger.log(u"Starting backlog for " + show.name + " season " + str(segment[1]) + " because some eps were set to wanted")
             self.todoBacklog.remove(segment)
 
+
+    def _num_ep_for_season(self, show, season, episode):
+		
+	num_ep = 0
+
+	for curSeason in show:
+
+		sn = int(curSeason["season"])
+		ep = int(curSeason["episodes"])
+
+		if (sn < season):
+			num_ep = num_ep + (ep)
+		elif (sn == season):
+			num_ep = num_ep + episode
+		elif (sn == 0):
+			continue
+		else:
+			continue
+
+	return num_ep
+	
