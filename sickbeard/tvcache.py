@@ -373,7 +373,7 @@ class TVCache():
             curSeason = int(curResult["season"])
             if curSeason == -1:
                 continue
-	    if sickbeard.TORRENT_METHOD = 'transmission':
+	    if sickbeard.TORRENT_METHOD == 'transmission':
 	    	if not episode:
             		curEp = curResult["episodes"].split("|")[1]
 	    	else:
