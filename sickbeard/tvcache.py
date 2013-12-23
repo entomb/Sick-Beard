@@ -373,7 +373,11 @@ class TVCache():
             curSeason = int(curResult["season"])
             if curSeason == -1:
                 continue
-            curEp = curResult["episodes"].split("|")[1]
+	    if not episode:
+            	curEp = curResult["episodes"].split("|")[1]
+	    else:
+            	curEp = episode.episode
+
             if not curEp:
                 continue
             curEp = int(curEp)
