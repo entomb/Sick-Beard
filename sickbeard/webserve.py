@@ -1489,7 +1489,7 @@ class ConfigProviders:
                       iptorrents_username=None, iptorrents_password=None, iptorrents_freeleech=None,
                       kat_trusted = None, kat_verified = None,
                       scc_username=None, scc_password=None,
-                      tntvillage_username=None, tntvillage_password=None,tntvillage_page=None,tntvillage_subtitle=None,
+                      tntvillage_username=None, tntvillage_password=None,tntvillage_page=None,tntvillage_subtitle=None,tntvillage_category=None,
                       torrentday_username=None, torrentday_password=None, torrentday_freeleech=None,
                       hdbits_username=None, hdbits_passkey=None,
                       newzbin_username=None, newzbin_password=None,
@@ -1677,6 +1677,7 @@ class ConfigProviders:
             tntvillage_subtitle = 0
 
         sickbeard.TNTVILLAGE_SUBTITLE = tntvillage_subtitle
+        sickbeard.TNTVILLAGE_CATEGORY = tntvillage_category
 
         sickbeard.TORRENTDAY_USERNAME = torrentday_username.strip()
         sickbeard.TORRENTDAY_PASSWORD = torrentday_password.strip()

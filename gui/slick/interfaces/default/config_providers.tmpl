@@ -1,6 +1,7 @@
 #import sickbeard
 #from sickbeard.providers.generic import GenericProvider
 #from sickbeard.providers import thepiratebay
+#from sickbeard.providers import tntvillage
 #set global $title="Config - Providers"
 #set global $header="Search Providers"
 
@@ -337,6 +338,16 @@ var show_nzb_providers = #if $sickbeard.USE_NZBS then "true" else "false"#;
                                 <span class="component-title">Page Number:</span>
                                 <input class="component-desc" type="number" name="tntvillage_page" value="$sickbeard.TNTVILLAGE_PAGE" size="10" />
                             </label>
+                        </div>
+                        <div class="field-pair">
+                            <label class="clearfix">
+                                <span class="component-title">Category:</span>
+                                    <select name="tntvillage_category" id="tntvillage_category">
+                                	#for $i in $tntvillage.category_dict.keys():
+                                  	<option value="$tntvillage.category_dict[$i]" #if $tntvillage.category_dict[$i] == $sickbeard.TNTVILLAGE_CATEGORY then "selected=\"selected\"" else ""#>$i</option>
+	                              	#end for
+                                    </select>
+			   </label>
                         </div>
                         <div class="field-pair">
                             <input type="checkbox" name="tntvillage_subtitle" id=""tntvillage_subtitle"" #if $sickbeard.TNTVILLAGE_SUBTITLE then "checked=\"checked\"" else ""#/>

@@ -33,6 +33,42 @@ from lib import requests
 from bs4 import BeautifulSoup
 from lib.unidecode import unidecode
 
+category_dict = {
+              'Serie TV' : 29,
+              'Cartoni' : 8,
+              'Anime' : 7,
+              'Programmi e Film TV' : 1,
+              'Documentari' : 14,
+             }
+
+category_excluded = {
+              'Sport' : 22,
+              'Teatro' : 23,
+              'Video Musicali' : 21,
+              'Film' : 4,
+              'Musica' : 2,
+              'Students Releases' : 13,
+              'E Books' : 3,
+              'Linux' : 6,
+              'Macintosh' : 9,
+              'Windows Software' : 10,
+              'Pc Game' : 11,
+              'Playstation 2' : 12,
+              'Wrestling' : 24,
+              'Varie' : 25,
+              'Xbox' : 26,
+              'Immagini sfondi' : 27,
+              'Altri Giochi' : 28,
+              'Fumetteria' : 30,
+              'Trash' : 31,
+              'PlayStation 1' : 32,
+              'PSP Portable' : 33,
+              'A Book' : 34,
+              'Podcast' : 35,
+              'Edicola' : 36,
+              'Mobile' : 37,
+             }
+
 class TNTVillageProvider(generic.TorrentProvider):
 
     urls = {'base_url' : 'http://forum.tntvillage.scambioetico.org',
@@ -52,8 +88,6 @@ class TNTVillageProvider(generic.TorrentProvider):
         self.cache = TNTVillageCache(self)
 
         self.url = self.urls['base_url']
-
-        self.categories = "cat=29"
 
         self.session = None
 
@@ -295,6 +329,9 @@ class TNTVillageProvider(generic.TorrentProvider):
 
         results = []
         items = {'Season': [], 'Episode': [], 'RSS': []}
+
+        self.categories = "cat=" + sickbeard.TNTVILLAGE_CATEGORY
+
 
         if not self._doLogin():
             return []
