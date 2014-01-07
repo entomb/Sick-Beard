@@ -87,6 +87,8 @@ class TNTVillageProvider(generic.TorrentProvider):
 
         self.cache = TNTVillageCache(self)
 
+	self.categories = "cat=29"
+
         self.url = self.urls['base_url']
 
         self.session = None
@@ -330,8 +332,7 @@ class TNTVillageProvider(generic.TorrentProvider):
         results = []
         items = {'Season': [], 'Episode': [], 'RSS': []}
 
-        self.categories = "cat=" + sickbeard.TNTVILLAGE_CATEGORY
-
+        self.categories = "cat=" + str(sickbeard.TNTVILLAGE_CATEGORY)
 
         if not self._doLogin():
             return []
