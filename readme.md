@@ -1,10 +1,15 @@
-
-Support for TNTVillage Torrent Provider
-
-==================================================
-
 Sick Beard
 =====
+
+This fork is based on mr-orange ThePirateBay branch https://github.com/mr-orange/Sick-Beard
+
+Feature list of his branch:
+- Support for TNTVillage torrent provider
+- Language default to IT for new show/importing existing shows (if available on TVDB)
+- Automatic remove of downloaded torrent on trasmission client
+- Added search for file name in not dotted notation
+- trackt intregration enhancement: watched episode on show added on sickbeard are marked as Archived
+- trackt intregration enhancement: always have a numebr (configurable) of unwatched episode for not paused show
 
 *Sick Beard is currently an alpha release. There may be severe bugs in it and at any given time it may not work at all.*
 
