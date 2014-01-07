@@ -346,7 +346,7 @@ class TNTVillageProvider(generic.TorrentProvider):
 		try: 	
 
 			last_page=0
-			y=sickbeard.TNTVILLAGE_PAGE
+			y=int(sickbeard.TNTVILLAGE_PAGE)
 
 			for x in range(0,y):
 				
