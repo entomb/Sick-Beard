@@ -40,9 +40,9 @@ class TraktChecker():
             if len(sickbeard.ROOT_DIRS.split('|')) < 2:
                 logger.log(u"No default root directory", logger.ERROR)
                 return
-            self.updateWantedList()
             self.updateShows()
             self.updateEpisodes()
+            self.updateWantedList()
 
     def updateWantedList(self):
 
@@ -105,12 +105,25 @@ class TraktChecker():
 
 			last_s = [last_x_s for last_x_s in last_per_season if last_x_s['season'] == s]
 			if episode == 0 or (s*100+e) <= (int(last_s[0]['season'])*100+int(last_s[0]['episodes'])): 
+			        # traktv URL parameters
+	            		data = {
+					'tvdb_id': tvdb_id,
+					'episodes': [ {
+						'season': s,
+						'episode': e
+						} ]
+					}
+
 				if (s*100+e) > (season*100+episode):
 					logger.log(u"Changed episode to wanted: S" + str(s) + "E"+  str(e), logger.DEBUG)
        	        			self.setEpisodeToWanted(newShow, s, e)
+        				TraktCall("show/episode/watchlist/%API%", sickbeard.TRAKT_API, sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_PASSWORD, data)
 				else:
 					logger.log(u"Changed episode to archived: S" + str(s) + "E"+  str(e), logger.DEBUG)
        	        			self.setEpisodeToArchived(newShow, s, e)
+                			if sickbeard.TRAKT_REMOVE_WATCHLIST:
+        					TraktCall("show/episode/unwatchlist/%API%", sickbeard.TRAKT_API, sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_PASSWORD, data)
+
 
 			if (s*100+e) == (int(last_s[0]['season'])*100+int(last_s[0]['episodes'])):
 				s = s + 1
@@ -182,7 +195,7 @@ class TraktChecker():
 
     def setEpisodeToArchived(self, show, s, e):
         """
-        Sets an episode to wanted, only is it is currently skipped
+        Sets an episode to archived, only is it is currently skipped
         """
         epObj = show.getEpisode(int(s), int(e))
         if epObj == None:
@@ -190,18 +203,10 @@ class TraktChecker():
         with epObj.lock:
             if epObj.status != SKIPPED:
                 return
-            logger.log(u"Setting episode s"+str(s)+"e"+str(e)+" of show " + show.name + " to wanted")
-#            # figure out what segment the episode is in and remember it so we can backlog it
-#            if epObj.show.air_by_date:
-#                ep_segment = str(epObj.airdate)[:7]
-#            else:
-#                ep_segment = epObj.season
+            logger.log(u"Setting episode s"+str(s)+"e"+str(e)+" of show " + show.name + " to archived")
 
             epObj.status = ARCHIVED
             epObj.saveToDB()
-#            backlog = (show, ep_segment)
-#            if self.todoBacklog.count(backlog)==0:
-#                self.todoBacklog.append(backlog)
 
 
     def setEpisodeToWanted(self, show, s, e):
