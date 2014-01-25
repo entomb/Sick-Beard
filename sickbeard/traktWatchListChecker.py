@@ -120,10 +120,11 @@ class TraktChecker():
 	sql_selection="select showid, show_name, season, episode from tv_episodes,tv_shows where tv_shows.tvdb_id = tv_episodes.showid and tv_episodes.status = ?"
 	episode = myDB.select(sql_selection, [WANTED])
 
-	for cur_episode in episode:
-		if not self.episode_in_watchlist(cur_episode["showid"], cur_episode["season"], cur_episode["episode"]):
-			logger.log(u"Episode: tvdb_id " + str(cur_episode["showid"])+ ", Title " +  str(cur_episode["show_name"]) + " " + str(cur_episode["season"]) + "x" + str(cur_episode["episode"]) + " should be added to watchlist", logger.DEBUG)
-			self.update_watchlist("episode", "add", cur_episode["showid"], cur_episode["season"], cur_episode["episode"]) 
+	if episode is not None:
+		for cur_episode in episode:
+			if not self.episode_in_watchlist(cur_episode["showid"], cur_episode["season"], cur_episode["episode"]):
+				logger.log(u"Episode: tvdb_id " + str(cur_episode["showid"])+ ", Title " +  str(cur_episode["show_name"]) + " " + str(cur_episode["season"]) + "x" + str(cur_episode["episode"]) + " should be added to watchlist", logger.DEBUG)
+				self.update_watchlist("episode", "add", cur_episode["showid"], cur_episode["season"], cur_episode["episode"]) 
 
         logger.log(u"Stop looking if some WANTED episode need to be added to watchlist", logger.DEBUG)
 			
@@ -132,9 +133,10 @@ class TraktChecker():
 	if sickbeard.TRAKT_REMOVE_SHOW_WATCHLIST:
 		logger.log(u"Start looking if some show need to be added to watchliast", logger.DEBUG)
 
-		for show in sickbeard.showList:
-			if not self.show_in_watchlist(show.tvdbid):
-				self.update_watchlist("show", "add", show.tvdbid) 
+		if sickbeard.showList is not None:
+			for show in sickbeard.showList:
+				if not self.show_in_watchlist(show.tvdbid):
+					self.update_watchlist("show", "add", show.tvdbid) 
 				
 		logger.log(u"Stop looking if some show need to be added to watchliast", logger.DEBUG)
 
@@ -404,14 +406,11 @@ class TraktChecker():
 
 	found = False
 
-	wshow = [show for show in self.EpisodeWatchlist if show["tvdb_id"] == str(tvdb_id)]	
-	if wshow is None:
-            return found	
-
-        for episode in wshow[0]["episodes"]:
-            if s==episode["season"] and e==episode["number"]:
-		found=True
-		break
+	for show in self.EpisodeWatchlist:
+        	for episode in show["episodes"]:
+		    if s==episode["season"] and e==episode["number"] and show["tvdb_id"]==str(tvdb_id):
+			found=True
+			break
 		
 	return found
 			
