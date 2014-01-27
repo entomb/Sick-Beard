@@ -137,7 +137,7 @@ class TraktChecker():
 		if sickbeard.showList is not None:
 			for show in sickbeard.showList:
 				if not self.show_in_watchlist(show.tvdbid):
-					logger.log(u"Show: tvdb_id " + str(show.tvdbid) + ", Title " +  str(show.name)" should be added to watchlist", logger.DEBUG)
+					logger.log(u"Show: tvdb_id " + str(show.tvdbid) + ", Title " +  str(show.name) + " should be added to watchlist", logger.DEBUG)
 					self.update_watchlist("show", "add", show.tvdbid, 0, 0) 
 				
 		logger.log(u"Stop looking if some show need to be added to watchliast", logger.DEBUG)
