@@ -400,7 +400,7 @@ class TraktChecker():
 
 	found = False
 
-	for show in self.EpisodeWatchlist:
+	for show in self.ShowWatchlist:
 	    if show["tvdb_id"] == str(tvdb_id):
 		found=True
 		break
