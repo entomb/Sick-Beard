@@ -810,7 +810,7 @@ def initialize(consoleLogging=True):
         TRAKT_USE_WATCHLIST = bool(check_setting_int(CFG, 'Trakt', 'trakt_use_watchlist', 0))
         TRAKT_METHOD_ADD = check_setting_str(CFG, 'Trakt', 'trakt_method_add', "0")
         TRAKT_START_PAUSED = bool(check_setting_int(CFG, 'Trakt', 'trakt_start_paused', 0))
-        TRAKT_NUM_EP = check_setting_int(CFG, 'Trakt', 'trakt_num_ep', 5)
+        TRAKT_NUM_EP = check_setting_int(CFG, 'Trakt', 'trakt_num_ep', 0)
 
         CheckSection(CFG, 'pyTivo')
         USE_PYTIVO = bool(check_setting_int(CFG, 'pyTivo', 'use_pytivo', 0))
