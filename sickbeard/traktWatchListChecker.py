@@ -80,8 +80,8 @@ class TraktChecker():
 					
 				if ep_obj.status != WANTED and ep_obj.status != UNKNOWN:
 					if self.episode_in_watchlist(show["tvdb_id"], episode["season"], episode["number"]):
-					        logger.log(u"Removing episode: tvdb_id " + show["tvdb_id"] + ", Title " + show["title"] + ", Season " + str(episode["season"]) + "Episode " + str(episode["number"]) + ", Status " + str(ep_obj.status) + " from Watchlist", logger.DEBUG)
-						self.update_watchlist("episode", "remove", cur_episode["showid"], cur_episode["season"], cur_episode["episode"]) 
+					        logger.log(u"Removing episode: tvdb_id " + show["tvdb_id"] + ", Title " + show["title"] + ", Season " + str(episode["season"]) + ", Episode " + str(episode["number"]) + ", Status " + str(ep_obj.status) + " from Watchlist", logger.DEBUG)
+						self.update_watchlist("episode", "remove", show["tvdb_id"], episode["season"], episode["number"]) 
 
 		logger.log(u"Stop looking if some episode has to be removed from watchlist", logger.DEBUG)
 
@@ -366,7 +366,7 @@ class TraktChecker():
 			'episode': e
 			} ]
 		}
-	    if update=="add":
+	    if update=="add" and sickbeard.TRAKT_REMOVE_WATCHLIST:
         	result=TraktCall("show/episode/watchlist/%API%", sickbeard.TRAKT_API, sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_PASSWORD, data)
             elif update=="remove" and sickbeard.TRAKT_REMOVE_WATCHLIST:
 	     	result=TraktCall("show/episode/unwatchlist/%API%", sickbeard.TRAKT_API, sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_PASSWORD, data)
@@ -377,9 +377,9 @@ class TraktChecker():
 		   'tvdb_id': tvdb_id
 			} ]
 		}
-	    if update=="add":
+	    if update=="add"  and sickbeard.TRAKT_REMOVE_SHOW_WATCHLIST:
         	result=TraktCall("show/watchlist/%API%", sickbeard.TRAKT_API, sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_PASSWORD, data)
-            elif update=="remove" and sickbeard.TRAKT_REMOVE_WATCHLIST:
+            elif update=="remove" and sickbeard.TRAKT_REMOVE_SHOW_WATCHLIST:
 	   	result=TraktCall("show/unwatchlist/%API%", sickbeard.TRAKT_API, sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_PASSWORD, data)
 	else:
             logger.log(u"Error invoking update_watchlist procedure, check parameter", logger.ERROR)
