@@ -152,7 +152,7 @@ class TraktChecker():
 		last_per_season = TraktCall("show/seasons.json/%API%/" + str(cur_result["tvdb_id"]), sickbeard.TRAKT_API, sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_PASSWORD)
 		watched = TraktCall("user/library/shows/watched.json/%API%/" + sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_API, sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_PASSWORD)
         	if last_per_season is None or watched is None:
-            		logger.log(u"Could not connect to trakt service, aborting watchlist update", logger.ERROR)
+            		logger.log(u"Could not connect to trakt service, cannot download show from library", logger.ERROR)
             		return
 
 		tvdb_id = str(cur_result["tvdb_id"])
@@ -347,7 +347,7 @@ class TraktChecker():
 	show_progress=TraktCall("user/progress/watched.json/%API%/" + sickbeard.TRAKT_USERNAME + "/" + str(show.tvdbid) + "/title/normal", sickbeard.TRAKT_API, sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_PASSWORD)
 
         if not show_progress:
-            logger.log(u"Could not connect to trakt service, aborting watchlist download", logger.ERROR)
+            logger.log(u"Could not connect to trakt service, cannot download show progress", logger.ERROR)
             return
 
 	if int(show_progress[0]["progress"]["percentage"]) == 100:
