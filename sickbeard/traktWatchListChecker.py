@@ -398,9 +398,14 @@ class TraktChecker():
 	
     def show_in_watchlist (self, tvdb_id):
 
+	found = False
+
 	for show in self.EpisodeWatchlist:
 	    if show["tvdb_id"] == str(tvdb_id):
-		return True
+		found=True
+		break
+
+	return found
 			
     def episode_in_watchlist (self, tvdb_id, s, e):
 
