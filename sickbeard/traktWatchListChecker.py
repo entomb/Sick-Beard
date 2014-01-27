@@ -114,19 +114,20 @@ class TraktChecker():
 				
     def addEpisodeToWatchList(self):
 
-        logger.log(u"Start looking if some WANTED episode need to be added to watchlist", logger.DEBUG)
+	if sickbeard.TRAKT_REMOVE_WATCHLIST:
+		logger.log(u"Start looking if some WANTED episode need to be added to watchlist", logger.DEBUG)
 
-	myDB = db.DBConnection()
-	sql_selection="select showid, show_name, season, episode from tv_episodes,tv_shows where tv_shows.tvdb_id = tv_episodes.showid and tv_episodes.status = ?"
-	episode = myDB.select(sql_selection, [WANTED])
+		myDB = db.DBConnection()
+		sql_selection="select showid, show_name, season, episode from tv_episodes,tv_shows where tv_shows.tvdb_id = tv_episodes.showid and tv_episodes.status = ?"
+		episode = myDB.select(sql_selection, [WANTED])
 
-	if episode is not None:
-		for cur_episode in episode:
-			if not self.episode_in_watchlist(cur_episode["showid"], cur_episode["season"], cur_episode["episode"]):
-				logger.log(u"Episode: tvdb_id " + str(cur_episode["showid"])+ ", Title " +  str(cur_episode["show_name"]) + " " + str(cur_episode["season"]) + "x" + str(cur_episode["episode"]) + " should be added to watchlist", logger.DEBUG)
-				self.update_watchlist("episode", "add", cur_episode["showid"], cur_episode["season"], cur_episode["episode"]) 
+		if episode is not None:
+			for cur_episode in episode:
+				if not self.episode_in_watchlist(cur_episode["showid"], cur_episode["season"], cur_episode["episode"]):
+					logger.log(u"Episode: tvdb_id " + str(cur_episode["showid"])+ ", Title " +  str(cur_episode["show_name"]) + " " + str(cur_episode["season"]) + "x" + str(cur_episode["episode"]) + " should be added to watchlist", logger.DEBUG)
+					self.update_watchlist("episode", "add", cur_episode["showid"], cur_episode["season"], cur_episode["episode"]) 
 
-        logger.log(u"Stop looking if some WANTED episode need to be added to watchlist", logger.DEBUG)
+		logger.log(u"Stop looking if some WANTED episode need to be added to watchlist", logger.DEBUG)
 			
     def addShowToWatchList(self):
 
