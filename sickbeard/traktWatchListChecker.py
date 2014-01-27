@@ -329,8 +329,8 @@ class TraktChecker():
                 show.paused = 1
                 continue
             self.setEpisodeToWanted(show, episode[1], episode[2])
-	    if not self.episode_in_watchlist(show.tvdb_id, episode[1], episode[2]):
-	        self.update_watchlist("episode", "add", show.tvdb_id,  episode[1], episode[2]) 
+	    if not self.episode_in_watchlist(show.tvdbid, episode[1], episode[2]):
+	        self.update_watchlist("episode", "add", show.tvdbid,  episode[1], episode[2]) 
         self.startBacklog(show)
 
     def startBacklog(self, show):
