@@ -81,15 +81,8 @@ class TraktChecker():
 				if ep_obj.status != WANTED and ep_obj.status != UNKNOWN:
 					if self.episode_in_watchlist(show["tvdb_id"], episode["season"], episode["number"]):
 					        logger.log(u"Removing episode: tvdb_id " + show["tvdb_id"] + ", Title " + show["title"] + ", Season " + str(episode["season"]) + "Episode " + str(episode["number"]) + ", Status " + str(ep_obj.status) + " from Watchlist", logger.DEBUG)
-						# URL parameters
-						data = {
-							'tvdb_id': show['tvdb_id'],
-								'episodes': [ {
-									'season': episode["season"],
-									'episode': episode["number"]
-									} ]
-							}
-						TraktCall("show/episode/unwatchlist/%API%", sickbeard.TRAKT_API, sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_PASSWORD, data)
+						self.update_watchlist("episode", "remove", cur_episode["showid"], cur_episode["season"], cur_episode["episode"]) 
+
 		logger.log(u"Stop looking if some episode has to be removed from watchlist", logger.DEBUG)
 
 
@@ -103,13 +96,7 @@ class TraktChecker():
 				if self.show_full_wathced(newShow):
 					if self.show_in_watchlist(show["tvdb_id"]):
 						logger.log(u"Removing show: tvdb_id " + show["tvdb_id"] + ", Title " + show["title"] + " from Watchlist", logger.DEBUG)
-						# traktv URL parameters
-						data = {
-							'shows': [ {
-								'tvdb_id': show["tvdb_id"]
-								} ]
-						       }
-						TraktCall("show/unwatchlist/%API%", sickbeard.TRAKT_API, sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_PASSWORD, data)
+						self.update_watchlist("show", "remove", how["tvdb_id"], 0, 0) 
 		logger.log(u"Stop looking if some show has to be removed from watchlist", logger.DEBUG)
 				
     def addEpisodeToWatchList(self):
@@ -380,21 +367,25 @@ class TraktChecker():
 			} ]
 		}
 	    if update=="add":
-        	TraktCall("show/episode/watchlist/%API%", sickbeard.TRAKT_API, sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_PASSWORD, data)
+        	result=TraktCall("show/episode/watchlist/%API%", sickbeard.TRAKT_API, sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_PASSWORD, data)
             elif update=="remove" and sickbeard.TRAKT_REMOVE_WATCHLIST:
-	     	TraktCall("show/episode/unwatchlist/%API%", sickbeard.TRAKT_API, sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_PASSWORD, data)
+	     	result=TraktCall("show/episode/unwatchlist/%API%", sickbeard.TRAKT_API, sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_PASSWORD, data)
 	elif type=="show":
 	    # traktv URL parameters
 	    data = {
-		'tvdb_id': tvdb_id
+		'shows': [ {
+		   'tvdb_id': tvdb_id
+			} ]
 		}
 	    if update=="add":
-        	TraktCall("show/watchlist/%API%", sickbeard.TRAKT_API, sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_PASSWORD, data)
+        	result=TraktCall("show/watchlist/%API%", sickbeard.TRAKT_API, sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_PASSWORD, data)
             elif update=="remove" and sickbeard.TRAKT_REMOVE_WATCHLIST:
-	   	TraktCall("show/unwatchlist/%API%", sickbeard.TRAKT_API, sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_PASSWORD, data)
+	   	result=TraktCall("show/unwatchlist/%API%", sickbeard.TRAKT_API, sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_PASSWORD, data)
 	else:
             logger.log(u"Error invoking update_watchlist procedure, check parameter", logger.ERROR)
 	    return False
+
+	return True
 	
     def show_in_watchlist (self, tvdb_id):
 
