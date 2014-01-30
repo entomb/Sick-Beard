@@ -44,14 +44,25 @@ class TraktChecker():
                 return
 
 	    self.ShowWatchlist = TraktCall("user/watchlist/shows.json/%API%/" + sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_API, sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_PASSWORD)
-	    if self.ShowWatchlist is None:
+	    if not self.ShowWatchlist:
 	        logger.log(u"Could not connect to trakt service, cannot download Show Watchlist", logger.ERROR)
 	        return
 
 	    self.EpisodeWatchlist = TraktCall("user/watchlist/episodes.json/%API%/" + sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_API, sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_PASSWORD)
-	    if self.EpisodeWatchlist is None:
+	    if not self.EpisodeWatchlist:
 	        logger.log(u"Could not connect to trakt service, cannot download Episode Watchlist", logger.ERROR)
 	        return
+
+	    self.ShowProgress = TraktCall("user/progress/watched.json/%API%/" + sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_API, sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_PASSWORD)
+	    if not self.ShowProgress:
+           	logger.log(u"Could not connect to trakt service, cannot download show progress", logger.ERROR)
+                return
+
+	    self.EpisodeWatched = TraktCall("user/library/shows/watched.json/%API%/" + sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_API, sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_PASSWORD)
+            if not self.EpisodeWatched:
+            	logger.log(u"Could not connect to trakt service, cannot download show from library", logger.ERROR)
+            	return
+
 
             self.removeShowFromWatchList()
             self.updateShows()
@@ -150,10 +161,9 @@ class TraktChecker():
 		episode = 0
 
 		last_per_season = TraktCall("show/seasons.json/%API%/" + str(cur_result["tvdb_id"]), sickbeard.TRAKT_API, sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_PASSWORD)
-		watched = TraktCall("user/library/shows/watched.json/%API%/" + sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_API, sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_PASSWORD)
-        	if last_per_season is None or watched is None:
-            		logger.log(u"Could not connect to trakt service, cannot download show from library", logger.ERROR)
-            		return
+            	if not last_per_season:
+            	    logger.log(u"Could not connect to trakt service, cannot download last season for show", logger.ERROR)
+            	    return
 
 		tvdb_id = str(cur_result["tvdb_id"])
 		show_name = (cur_result["show_name"])
@@ -162,7 +172,7 @@ class TraktChecker():
 
 		logger.log(u"TVDB_ID: " + str(tvdb_id) + ", Show: " + show_name + " - First skipped Episode: Season " + str(sn_sb) + ", Episode " + str(ep_sb), logger.DEBUG)
 
-		if tvdb_id not in (show["tvdb_id"] for show in watched):
+		if tvdb_id not in (show["tvdb_id"] for show in self.EpisodeWatched):
 			logger.log(u"Show not founded in Watched list", logger.DEBUG)
 			if (sn_sb*100+ep_sb) > 100+num_of_download:
 				logger.log(u"First " + str(num_of_download) + " episode already downloaded", logger.DEBUG)
@@ -175,7 +185,7 @@ class TraktChecker():
 		else:
 			logger.log(u"Show founded in Watched list", logger.DEBUG)
 
-			show_watched = [show for show in watched if show["tvdb_id"] == tvdb_id]
+			show_watched = [show for show in self.EpisodeWatched if show["tvdb_id"] == tvdb_id]
 			
 			season = show_watched[0]['seasons'][0]['season']
 			episode = show_watched[0]['seasons'][0]['episodes'][-1]
@@ -344,16 +354,15 @@ class TraktChecker():
     def show_full_wathced (self, show):
 
 	logger.log(u"Checking if show: tvdb_id " + str(show.tvdbid) + ", Title " + str(show.name) + " is completely watched", logger.DEBUG)
-	show_progress=TraktCall("user/progress/watched.json/%API%/" + sickbeard.TRAKT_USERNAME + "/" + str(show.tvdbid) + "/title/normal", sickbeard.TRAKT_API, sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_PASSWORD)
 
-        if not show_progress:
-            logger.log(u"Could not connect to trakt service, cannot download show progress", logger.ERROR)
-            return
+	found = False
 
-	if int(show_progress[0]["progress"]["percentage"]) == 100:
-		return True
-	else:
-		return False
+	for pshow in self.ShowProgress:
+	    if pshow["show"]["tvdb_id"] == str(show.tvdbid) and int(pshow["progress"]["percentage"]) == 100:
+		found=True
+		break
+
+	return found
 	
     def update_watchlist (self, type, update, tvdb_id, s, e):
 
