@@ -621,6 +621,24 @@ tr.qual b,
 span.qual b {
   color: #343434;
 }
+
+tr.downloadable,
+span.downloadable {
+  background-color: #FAFA9E;
+  padding: 5px;
+  font-size: 13px;
+  font-weight: bold;
+  color: #D2D201;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  border-radius: 5px;
+}
+
+tr.downloadable b,
+span.downloadable b {
+  color: #343434;
+}
+
 tr.wanted,
 span.wanted {
   background-color: #FDEBF3;
@@ -656,6 +674,7 @@ span.snatched b {
 }
 
 tr.wanted,
+tr.downloadable,
 tr.qual,
 tr.good,
 tr.skipped,

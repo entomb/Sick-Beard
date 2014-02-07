@@ -450,3 +450,18 @@ class AddTorrentHash(AddLastUpdateTVDB):
             self.addColumn("tv_episodes", "torrent_hash", 'TEXT', None)
 
         self.incDBVersion()
+
+class AddLastDownloadableSearch(AddTorrentHash):
+    """ Adding column torrent_hash to tv_episodes for removing torrent instance after donwloading it """
+
+    def test(self):
+        return self.checkDBVersion() >= 20
+
+    def execute(self):
+        backupDatabase(20)
+
+        logger.log(u"Adding column last_downloadablesearch in info")
+        if not self.hasColumn("info", "last_downloadablesearch"):
+            self.addColumn("info", "last_downloadablesearch", 'NUMERIC', 0)
+
+        self.incDBVersion()

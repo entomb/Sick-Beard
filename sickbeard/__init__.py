@@ -34,7 +34,7 @@ from providers import ezrss, tvtorrents, btn, newznab, womble, thepiratebay, tor
 from sickbeard.config import CheckSection, check_setting_int, check_setting_str, ConfigMigrator
 
 
-from sickbeard import searchCurrent, searchBacklog, showUpdater, versionChecker, properFinder, autoPostProcesser, subtitles, traktWatchListChecker
+from sickbeard import searchCurrent, searchBacklog, searchDownloadable, showUpdater, versionChecker, properFinder, autoPostProcesser, subtitles, traktWatchListChecker
 from sickbeard import helpers, db, exceptions, show_queue, search_queue, scheduler
 from sickbeard import logger
 from sickbeard import naming
@@ -70,6 +70,7 @@ PIDFILE = ''
 DAEMON = None
 
 backlogSearchScheduler = None
+downloadableSearchScheduler = None
 currentSearchScheduler = None
 showUpdateScheduler = None
 versionCheckScheduler = None
@@ -167,6 +168,7 @@ ALLOW_HIGH_PRIORITY = None
 
 SEARCH_FREQUENCY = None
 BACKLOG_SEARCH_FREQUENCY = 21
+DOWNLOADABLE_SEARCH_FREQUENCY = 1
 
 MIN_SEARCH_FREQUENCY = 10
 
@@ -428,6 +430,10 @@ def get_backlog_cycle_time():
     cycletime = SEARCH_FREQUENCY*2+7
     return max([cycletime, 720])
 
+def get_downloadable_search_cycle_time():
+    cycletime = SEARCH_FREQUENCY*2+7
+    return max([cycletime, 720])
+
 def initialize(consoleLogging=True):
 
     with INIT_LOCK:
@@ -435,7 +441,7 @@ def initialize(consoleLogging=True):
         global ACTUAL_LOG_DIR, LOG_DIR, WEB_PORT, WEB_LOG, ENCRYPTION_VERSION, WEB_ROOT, WEB_USERNAME, WEB_PASSWORD, WEB_HOST, WEB_IPV6, USE_API, API_KEY, ENABLE_HTTPS, HTTPS_CERT, HTTPS_KEY, \
                 USE_NZBS, USE_TORRENTS, NZB_METHOD, NZB_DIR, DOWNLOAD_PROPERS, ALLOW_HIGH_PRIORITY, TORRENT_METHOD, \
                 SAB_USERNAME, SAB_PASSWORD, SAB_APIKEY, SAB_CATEGORY, SAB_HOST, \
-                NZBGET_USERNAME, NZBGET_PASSWORD, NZBGET_CATEGORY, NZBGET_HOST, currentSearchScheduler, backlogSearchScheduler, \
+                NZBGET_USERNAME, NZBGET_PASSWORD, NZBGET_CATEGORY, NZBGET_HOST, currentSearchScheduler, backlogSearchScheduler, downloadableSearchScheduler, \
                 TORRENT_USERNAME, TORRENT_PASSWORD, TORRENT_HOST, TORRENT_PATH, TORRENT_RATIO, TORRENT_PAUSED, TORRENT_HIGH_BANDWIDTH, TORRENT_LABEL, \
                 USE_XBMC, XBMC_NOTIFY_ONSNATCH, XBMC_NOTIFY_ONDOWNLOAD, XBMC_NOTIFY_ONSUBTITLEDOWNLOAD, XBMC_UPDATE_FULL, XBMC_UPDATE_ONLYFIRST, \
                 XBMC_UPDATE_LIBRARY, XBMC_HOST, XBMC_USERNAME, XBMC_PASSWORD, \
@@ -451,7 +457,7 @@ def initialize(consoleLogging=True):
                 TNTVILLAGE, TNTVILLAGE_USERNAME, TNTVILLAGE_PASSWORD, TNTVILLAGE_PAGE, TNTVILLAGE_SUBTITLE, TNTVILLAGE_CATEGORY, TNTVILLAGE_OPTIONS, \
                 TORRENTDAY, TORRENTDAY_USERNAME, TORRENTDAY_PASSWORD, TORRENTDAY_UID, TORRENTDAY_HASH, TORRENTDAY_FREELEECH, TORRENTDAY_OPTIONS, \
 		HDBITS, HDBITS_USERNAME, HDBITS_PASSKEY, HDBITS_OPTIONS,\
-                TORRENT_DIR, USENET_RETENTION, SOCKET_TIMEOUT, SEARCH_FREQUENCY, DEFAULT_SEARCH_FREQUENCY, BACKLOG_SEARCH_FREQUENCY, \
+                TORRENT_DIR, USENET_RETENTION, SOCKET_TIMEOUT, SEARCH_FREQUENCY, DEFAULT_SEARCH_FREQUENCY, BACKLOG_SEARCH_FREQUENCY, DOWNLOADABLE_SEARCH_FREQUENCY, \
                 QUALITY_DEFAULT, FLATTEN_FOLDERS_DEFAULT, SUBTITLES_DEFAULT, STATUS_DEFAULT, \
                 GROWL_NOTIFY_ONSNATCH, GROWL_NOTIFY_ONDOWNLOAD, GROWL_NOTIFY_ONSUBTITLEDOWNLOAD, TWITTER_NOTIFY_ONSNATCH, TWITTER_NOTIFY_ONDOWNLOAD, TWITTER_NOTIFY_ONSUBTITLEDOWNLOAD, \
                 USE_GROWL, GROWL_HOST, GROWL_PASSWORD, USE_PROWL, PROWL_NOTIFY_ONSNATCH, PROWL_NOTIFY_ONDOWNLOAD, PROWL_NOTIFY_ONSUBTITLEDOWNLOAD, PROWL_API, PROWL_PRIORITY, PROG_DIR, \
@@ -1029,6 +1035,11 @@ def initialize(consoleLogging=True):
                                                                       runImmediately=True)
         backlogSearchScheduler.action.cycleTime = BACKLOG_SEARCH_FREQUENCY
 
+        downloadableSearchScheduler = searchDownloadable.DownloadableSearchScheduler(searchDownloadable.DownloadableSearcher(),
+                                                                      cycleTime=datetime.timedelta(minutes=get_downloadable_search_cycle_time()),
+                                                                      threadName="DOWNLOADABLE_SEARCH",
+                                                                      runImmediately=True)
+        downloadableSearchScheduler.action.cycleTime = DOWNLOADABLE_SEARCH_FREQUENCY
 
         subtitlesFinderScheduler = scheduler.Scheduler(subtitles.SubtitlesFinder(),
                                                      cycleTime=datetime.timedelta(hours=SUBTITLES_FINDER_FREQUENCY),
@@ -1046,7 +1057,7 @@ def initialize(consoleLogging=True):
 
 def start():
 
-    global __INITIALIZED__, currentSearchScheduler, backlogSearchScheduler, \
+    global __INITIALIZED__, currentSearchScheduler, backlogSearchScheduler, downloadableSearchScheduler, \
             showUpdateScheduler, versionCheckScheduler, showQueueScheduler, \
             properFinderScheduler, autoPostProcesserScheduler, searchQueueScheduler, \
             subtitlesFinderScheduler, started, USE_SUBTITLES, \
@@ -1061,6 +1072,9 @@ def start():
 
             # start the backlog scheduler
             backlogSearchScheduler.thread.start()
+
+            # start the downloadable search scheduler
+            downloadableSearchScheduler.thread.start()
 
             # start the show updater
             showUpdateScheduler.thread.start()
@@ -1091,7 +1105,7 @@ def start():
 
 def halt ():
 
-    global __INITIALIZED__, currentSearchScheduler, backlogSearchScheduler, showUpdateScheduler, \
+    global __INITIALIZED__, currentSearchScheduler, backlogSearchScheduler, downloadableSearchScheduler, showUpdateScheduler, \
             showQueueScheduler, properFinderScheduler, autoPostProcesserScheduler, searchQueueScheduler, \
             subtitlesFinderScheduler, started, \
             traktWatchListCheckerSchedular
@@ -1115,6 +1129,13 @@ def halt ():
             logger.log(u"Waiting for the BACKLOG thread to exit")
             try:
                 backlogSearchScheduler.thread.join(10)
+            except:
+                pass
+
+            downloadableSearchScheduler.abort = True
+            logger.log(u"Waiting for the DOWNLOADABLE Search thread to exit")
+            try:
+                downloadableSearchScheduler.thread.join(10)
             except:
                 pass
 

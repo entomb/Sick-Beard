@@ -50,7 +50,7 @@ from sickbeard import failedProcessor
 
 from sickbeard.providers import newznab, rsstorrent
 from sickbeard.common import Quality, Overview, statusStrings, qualityPresetStrings
-from sickbeard.common import SNATCHED, SKIPPED, UNAIRED, IGNORED, ARCHIVED, WANTED, FAILED
+from sickbeard.common import SNATCHED, SKIPPED, DOWNLOADABLE, UNAIRED, IGNORED, ARCHIVED, WANTED, FAILED
 from sickbeard.common import SD, HD720p, HD1080p
 from sickbeard.exceptions import ex
 from sickbeard.webapi import Api
@@ -459,6 +459,7 @@ class Manage:
             epCounts[Overview.GOOD] = 0
             epCounts[Overview.UNAIRED] = 0
             epCounts[Overview.SNATCHED] = 0
+            epCounts[Overview.DOWNLOADABLE] = 0
 
             sqlResults = myDB.select("SELECT * FROM tv_episodes WHERE showid = ? ORDER BY season DESC, episode DESC", [curShow.tvdbid])
 
@@ -3182,6 +3183,7 @@ class Home:
         epCounts[Overview.GOOD] = 0
         epCounts[Overview.UNAIRED] = 0
         epCounts[Overview.SNATCHED] = 0
+        epCounts[Overview.DOWNLOADABLE] = 0
 
         for curResult in sqlResults:
                 

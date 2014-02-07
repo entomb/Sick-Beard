@@ -50,7 +50,7 @@ from sickbeard import history
 from sickbeard import encodingKludge as ek
 
 from common import Quality, Overview
-from common import DOWNLOADED, SNATCHED, SNATCHED_PROPER, ARCHIVED, IGNORED, UNAIRED, WANTED, SKIPPED, UNKNOWN, FAILED
+from common import DOWNLOADED, SNATCHED, SNATCHED_PROPER, ARCHIVED, IGNORED, UNAIRED, WANTED, SKIPPED, DOWNLOADABLE, UNKNOWN, FAILED
 from common import NAMING_DUPLICATE, NAMING_EXTEND, NAMING_LIMITED_EXTEND, NAMING_SEPARATED_REPEAT, NAMING_LIMITED_EXTEND_E_PREFIXED
 
 
@@ -1075,6 +1075,8 @@ class TVShow(object):
 
         if epStatus == WANTED:
             return Overview.WANTED
+        elif epStatus == DOWNLOADABLE:
+            return Overview.DOWNLOADABLE
         elif epStatus in (UNAIRED, UNKNOWN):
             return Overview.UNAIRED
         elif epStatus in (SKIPPED, IGNORED):

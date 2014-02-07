@@ -30,6 +30,7 @@ from sickbeard import ui
 BACKLOG_SEARCH = 10
 RSS_SEARCH = 20
 MANUAL_SEARCH = 30
+DOWNLOADABLE_SEARCH = 5
 
 
 class SearchQueue(generic_queue.GenericQueue):
@@ -76,8 +77,37 @@ class SearchQueue(generic_queue.GenericQueue):
             generic_queue.GenericQueue.add_item(self, item)
         elif isinstance(item, FailedQueueItem) and not self.is_in_queue(item.show, item.segment):
             generic_queue.GenericQueue.add_item(self, item)
+	elif isinstance(item, DownloadSearchQueueItem): 
+            generic_queue.GenericQueue.add_item(self, item)
         else:
             logger.log(u"Not adding item, it's already in the queue", logger.DEBUG)
+
+class DownloadSearchQueueItem(generic_queue.QueueItem):
+    def __init__(self, show):
+        generic_queue.QueueItem.__init__(self, 'Downloadable Search', DOWNLOADABLE_SEARCH)
+        self.priority = generic_queue.QueuePriorities.LOW
+        self.thread_name = 'DOWNLOADABLE_SEARCH-' + str(show.tvdbid)
+
+        self.show = show
+
+    def execute(self):
+        generic_queue.QueueItem.execute(self)
+
+        logger.log(u"Seeing if is available any episodes from " + self.show.name)
+
+        myDB = db.DBConnection()
+        sql_selection="SELECT show_name, tvdb_id, season, episode, paused FROM (SELECT * FROM tv_shows s,tv_episodes e WHERE s.tvdb_id = e.showid) T1 WHERE T1.tvdb_id = ? and T1.episode_id IN (SELECT T2.episode_id FROM tv_episodes T2 WHERE T2.showid = T1.tvdb_id and T2.status in (?) and T2.season!=0 and airdate is not null ORDER BY T2.season,T2.episode LIMIT 1) ORDER BY T1.show_name,season,episode"
+        episodeToSearch = myDB.select(sql_selection,[self.show.tvdbid, common.SKIPPED])
+	
+	ep_obj = self.show.getEpisode(episodeToSearch[0]["season"], episodeToSearch[0]["episode"])
+
+	foundEpisode = search.findEpisode(ep_obj, manualSearch=True)
+        if foundEpisode:
+            with ep_obj.lock:
+                ep_obj.status = common.DOWNLOADABLE
+                ep_obj.saveToDB()
+
+        generic_queue.QueueItem.finish(self)
 
 class ManualSearchQueueItem(generic_queue.QueueItem):
     def __init__(self, ep_obj):

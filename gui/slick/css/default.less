@@ -320,6 +320,16 @@ color: #F7B42C;
 b { color:@text-color;}
 }
 
+tr.downloadable,span.downloadable {
+background-color:#FAFA9E;
+padding:5px;
+font-size: 13px;
+font-weight: bold;
+color: #D2D201;
+.rounded(5px);
+b { color:@text-color;}
+}
+
 tr.wanted,span.wanted {
 background-color:#FDEBF3;
 padding:5px;
@@ -330,7 +340,7 @@ color: #F49AC1;
 b { color:@text-color;}
 }
 
-tr.wanted,tr.qual,tr.good,tr.skipped,tr.unaired {
+tr.wanted,tr.downloadable,tr.qual,tr.good,tr.skipped,tr.unaired {
 	font-size: 14px;
 	font-weight: normal;
 	color: @text-color;
