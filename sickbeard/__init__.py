@@ -1036,7 +1036,7 @@ def initialize(consoleLogging=True):
         backlogSearchScheduler.action.cycleTime = BACKLOG_SEARCH_FREQUENCY
 
         downloadableSearchScheduler = searchDownloadable.DownloadableSearchScheduler(searchDownloadable.DownloadableSearcher(),
-                                                                      cycleTime=datetime.timedelta(minutes=get_downloadable_search_cycle_time()),
+                                                                      cycleTime=datetime.timedelta(hours=1),
                                                                       threadName="DOWNLOADABLE_SEARCH",
                                                                       runImmediately=True)
         downloadableSearchScheduler.action.cycleTime = DOWNLOADABLE_SEARCH_FREQUENCY
