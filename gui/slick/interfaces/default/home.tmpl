@@ -168,24 +168,24 @@ $myShowList.sort(lambda x, y: cmp(x.name, y.name))
 #if len($curShowAll) != 0:
   #if len($curShowDownloads) != 0:
     #if len($curShowDownloadable) != 0:
-      #set $dlStat = str($curShowDownloads[0])+" / "+str($curShowDownloadable[0]) + " / "+str($curShowAll[0])
+      #set $dlStat = str($curShowDownloads[0])+"/"+str($curShowDownloadable[0])+"/"+str($curShowAll[0])
       #set $nom1 = $curShowDownloads[0]
       #set $nom2 = $curShowDownloadable[0]
       #set $den = $curShowAll[0]
     #else
-      #set $dlStat = str($curShowDownloads[0])+" / 0 / "+str($curShowAll[0])
+      #set $dlStat = str($curShowDownloads[0])+"/0/"+str($curShowAll[0])
       #set $nom1 = $curShowDownloads[0]
       #set $nom2 = 0
       #set $den = $curShowAll[0]
     #end if
   #else
     #if len($curShowDownloadable) != 0:
-      #set $dlStat = "0 / "+str($curShowDownloadable[0])+" / "+str($curShowAll[0])
+      #set $dlStat = "0/"+str($curShowDownloadable[0])+"/"+str($curShowAll[0])
       #set $nom1 = 0
       #set $nom2 = $curShowDownloadable[0]
       #set $den = $curShowAll[0]
     #else
-      #set $dlStat = "0 / 0 / "+str($curShowAll[0])
+      #set $dlStat = "0/0/"+str($curShowAll[0])
       #set $nom1 = 0
       #set $nom2 = 0
       #set $den = $curShowAll[0]
