@@ -243,9 +243,23 @@ class TNTVillageProvider(generic.TorrentProvider):
                 	search_string['Episode'].append(ep_string)
 
                 ep_string = show_name_helpers.sanitizeSceneName(show_name) +' S%02d' % int(ep_obj.season) #1) ShowName SXX   
-                search_string['Episode'].append(ep_string)
+		found = 0
+		for ep_name in search_string['Episode']:
+			if ep_string == ep_name:
+				found = 1	
+				continue
+		if not found:
+                	search_string['Episode'].append(ep_string)
+
                 ep_string = self.sanitizeSceneName_not_dotted(show_name) +' S%02d' % int(ep_obj.season) #1) ShowName SXX   
-                search_string['Episode'].append(ep_string)
+		found = 0
+		for ep_name in search_string['Episode']:
+			if ep_string == ep_name:
+				found = 1	
+				continue
+		if not found:
+                	search_string['Episode'].append(ep_string)
+
 
         return [search_string]
 
