@@ -242,6 +242,9 @@ class TNTVillageProvider(generic.TorrentProvider):
 		if not found:
                 	search_string['Episode'].append(ep_string)
 
+                ep_string = show_name +' S%02d' % int(ep_obj.season) #1) ShowName SXX   
+                search_string['Episode'].append(ep_string)
+
         return [search_string]
 
     def _reverseQuality(self, quality):
