@@ -116,11 +116,7 @@ var show_nzb_providers = #if $sickbeard.USE_NZBS then "true" else "false"#;
                                 <span class="component-title jumbo">Configure Provider:</span>
                                 <span class="component-desc">
                                     #set $provider_config_list = []
-<<<<<<< HEAD
-                                    #for $cur_provider in ("thepiratebay", "tvtorrents", "btn", "torrentleech", "iptorrents", "omgwtfnzbs", "kickasstorrents", "sceneaccess", "tntvillage", "torrentday", "hdbits"):
-=======
-                                    #for $cur_provider in ("thepiratebay", "tvtorrents", "btn", "torrentleech", "iptorrents", "omgwtfnzbs", "kickasstorrents", "sceneaccess", "hdbits", "nextgen"):
->>>>>>> upstream/ThePirateBay
+                                    #for $cur_provider in ("thepiratebay", "tntvillage", "tvtorrents", "btn", "torrentleech", "iptorrents", "omgwtfnzbs", "kickasstorrents", "sceneaccess", "hdbits", "nextgen"):
                                         #set $cur_provider_obj = $sickbeard.providers.getProviderClass($cur_provider)
                                         #if $cur_provider_obj.providerType == $GenericProvider.NZB and not $sickbeard.USE_NZBS:
                                         	#continue
