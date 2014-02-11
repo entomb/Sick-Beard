@@ -27,7 +27,7 @@ from sickbeard import encodingKludge as ek
 from sickbeard.name_parser.parser import NameParser, InvalidNameException
 
 MIN_DB_VERSION = 9 # oldest db version we support migrating from
-MAX_DB_VERSION = 20
+MAX_DB_VERSION = 21
 
 class MainSanityCheck(db.DBSanityCheck):
 
@@ -108,13 +108,13 @@ class InitialSchema (db.SchemaUpgrade):
                 "CREATE TABLE db_version (db_version INTEGER);",
                 "CREATE TABLE history (action NUMERIC, date NUMERIC, showid NUMERIC, season NUMERIC, episode NUMERIC, quality NUMERIC, resource TEXT, provider TEXT);",
                 "CREATE TABLE imdb_info (tvdb_id INTEGER PRIMARY KEY, imdb_id TEXT, title TEXT, year NUMERIC, akas TEXT, runtimes NUMERIC, genres TEXT, countries TEXT, country_codes TEXT, certificates TEXT, rating TEXT, votes INTEGER, last_update NUMERIC)",
-                "CREATE TABLE info (last_backlog NUMERIC, last_tvdb NUMERIC);",
-                "CREATE TABLE tv_episodes (episode_id INTEGER PRIMARY KEY, showid NUMERIC, tvdbid NUMERIC, name TEXT, season NUMERIC, episode NUMERIC, description TEXT, airdate NUMERIC, hasnfo NUMERIC, hastbn NUMERIC, status NUMERIC, location TEXT, file_size NUMERIC, release_name TEXT, subtitles TEXT, subtitles_searchcount NUMERIC, subtitles_lastsearch TIMESTAMP, is_proper NUMERIC)",
+                "CREATE TABLE info (last_backlog NUMERIC, last_tvdb NUMERIC, last_downloadablesearch, NUMERIC);",
+                "CREATE TABLE tv_episodes (episode_id INTEGER PRIMARY KEY, showid NUMERIC, tvdbid NUMERIC, name TEXT, season NUMERIC, episode NUMERIC, description TEXT, airdate NUMERIC, hasnfo NUMERIC, hastbn NUMERIC, status NUMERIC, location TEXT, file_size NUMERIC, release_name TEXT, subtitles TEXT, subtitles_searchcount NUMERIC, subtitles_lastsearch TIMESTAMP, is_proper NUMERIC, torrent_hash, TEXT)",
                 "CREATE TABLE tv_shows (show_id INTEGER PRIMARY KEY, location TEXT, show_name TEXT, tvdb_id NUMERIC, network TEXT, genre TEXT, runtime NUMERIC, quality NUMERIC, airs TEXT, status TEXT, flatten_folders NUMERIC, paused NUMERIC, startyear NUMERIC, tvr_id NUMERIC, tvr_name TEXT, air_by_date NUMERIC, lang TEXT, subtitles NUMERIC, notify_list TEXT, imdb_id TEXT, last_update_tvdb NUMERIC)",
                 "CREATE INDEX idx_tv_episodes_showid_airdate ON tv_episodes(showid,airdate);",
                 "CREATE INDEX idx_showid ON tv_episodes (showid);",
                 "CREATE UNIQUE INDEX idx_tvdb_id ON tv_shows (tvdb_id);",
-                "INSERT INTO db_version (db_version) VALUES (19);"
+                "INSERT INTO db_version (db_version) VALUES (20);"
                 ]
             for query in queries:
                 self.connection.action(query)
