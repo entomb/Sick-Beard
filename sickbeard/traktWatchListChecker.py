@@ -44,22 +44,22 @@ class TraktChecker():
                 return
 
 	    self.ShowWatchlist = TraktCall("user/watchlist/shows.json/%API%/" + sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_API, sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_PASSWORD)
-	    if not self.ShowWatchlist:
+	    if self.ShowWatchlist is None:
 	        logger.log(u"Could not connect to trakt service, cannot download Show Watchlist", logger.ERROR)
 	        return
 
 	    self.EpisodeWatchlist = TraktCall("user/watchlist/episodes.json/%API%/" + sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_API, sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_PASSWORD)
-	    if not self.EpisodeWatchlist:
+	    if self.EpisodeWatchlist is None:
 	        logger.log(u"Could not connect to trakt service, cannot download Episode Watchlist", logger.ERROR)
 	        return
 
 	    self.ShowProgress = TraktCall("user/progress/watched.json/%API%/" + sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_API, sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_PASSWORD)
-	    if not self.ShowProgress:
+	    if self.ShowProgress is None:
            	logger.log(u"Could not connect to trakt service, cannot download show progress", logger.ERROR)
                 return
 
 	    self.EpisodeWatched = TraktCall("user/library/shows/watched.json/%API%/" + sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_API, sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_PASSWORD)
-            if not self.EpisodeWatched:
+            if self.EpisodeWatched is None:
             	logger.log(u"Could not connect to trakt service, cannot download show from library", logger.ERROR)
             	return
 
