@@ -99,15 +99,17 @@ class DownloadSearchQueueItem(generic_queue.QueueItem):
         sql_selection="SELECT show_name, tvdb_id, season, episode, paused FROM (SELECT * FROM tv_shows s,tv_episodes e WHERE s.tvdb_id = e.showid) T1 WHERE T1.tvdb_id = ? and T1.episode_id IN (SELECT T2.episode_id FROM tv_episodes T2 WHERE T2.showid = T1.tvdb_id and T2.status in (?) and T2.season!=0 and airdate is not null ORDER BY T2.season,T2.episode LIMIT 1) ORDER BY T1.show_name,season,episode"
         episodeToSearch = myDB.select(sql_selection,[self.show.tvdbid, common.SKIPPED])
 	
-	ep_obj = self.show.getEpisode(episodeToSearch[0]["season"], episodeToSearch[0]["episode"])
+	if episodeToSearch:
+		
+	    ep_obj = self.show.getEpisode(episodeToSearch[0]["season"], episodeToSearch[0]["episode"])
 
-	foundEpisode = search.findEpisode(ep_obj, manualSearch=True)
-        if foundEpisode:
-            with ep_obj.lock:
-                ep_obj.status = common.DOWNLOADABLE
-                ep_obj.saveToDB()
+	    foundEpisode = search.findEpisode(ep_obj, manualSearch=True)
+            if foundEpisode:
+                with ep_obj.lock:
+                    ep_obj.status = common.DOWNLOADABLE
+                    ep_obj.saveToDB()
 
-        generic_queue.QueueItem.finish(self)
+            generic_queue.QueueItem.finish(self)
 
 class ManualSearchQueueItem(generic_queue.QueueItem):
     def __init__(self, ep_obj):
