@@ -488,7 +488,7 @@ class AddLastProperSearch(AddLastUpdateTVDB):
         return self.checkDBVersion() >= 21
     
     def execute(self):
-        backupDatabase(19)
+        backupDatabase(21)
 
         logger.log(u"Adding column last_proper_search to info")
         if not self.hasColumn("info", "last_proper_search"):
