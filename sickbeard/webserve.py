@@ -1636,13 +1636,10 @@ class ConfigProviders:
                 sickbeard.PUBLICHD = curEnabled
             elif curProvider == 'sceneaccess':
                 sickbeard.SCC = curEnabled
-<<<<<<< HEAD
             elif curProvider == 'tntvillage':
                 sickbeard.TNTVILLAGE = curEnabled
-=======
             elif curProvider == 'hdtorrents':
                 sickbeard.HDTORRENTS = curEnabled
->>>>>>> upstream/ThePirateBay
             elif curProvider == 'torrentday':
                 sickbeard.TORRENTDAY = curEnabled
             elif curProvider == 'hdbits':
