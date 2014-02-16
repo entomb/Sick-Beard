@@ -21,6 +21,7 @@ import urllib2
 import urllib
 import time
 import re
+import datetime
 
 import sickbeard
 import generic
@@ -29,6 +30,7 @@ from sickbeard import logger
 from sickbeard import tvcache
 from sickbeard import db
 from sickbeard import classes
+from sickbeard import helpers
 from sickbeard import show_name_helpers
 from sickbeard.common import Overview
 from sickbeard.exceptions import ex
@@ -107,7 +109,7 @@ class NextGenProvider(generic.TorrentProvider):
             self.session = requests.Session()
             self.session.headers.update({'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:24.0) Gecko/20130519 Firefox/24.0)'})
             data = self.session.get(self.urls['login_page'])
-            bs = BeautifulSoup(data.content)
+            bs = BeautifulSoup(data.content.decode('iso-8859-1'))
             csrfraw = bs.find('form', attrs = {'id': 'login'})['action']
             output = self.session.post(self.urls['base_url']+csrfraw, data=login_params)            
             
@@ -194,7 +196,7 @@ class NextGenProvider(generic.TorrentProvider):
                 if data:
 
                     try:
-                        html = BeautifulSoup(data, features=["html5lib", "permissive"])
+                        html = BeautifulSoup(data.decode('iso-8859-1'), features=["html5lib", "permissive"])
                         resultsTable = html.find('div', attrs = {'id' : 'torrent-table-wrapper'})
 
                         if not resultsTable:
@@ -278,22 +280,27 @@ class NextGenProvider(generic.TorrentProvider):
 
         return response.content
 
-    def findPropers(self, search_date=None):
+    def findPropers(self, search_date=datetime.datetime.today()):
 
         results = []
 
-        sqlResults = db.DBConnection().select('SELECT s.show_name, e.showid, e.season, e.episode, e.status, e.airdate FROM tv_episodes AS e INNER JOIN tv_shows AS s ON (e.showid = s.tvdb_id) WHERE e.airdate >= ? AND (e.status IN ('+','.join([str(x) for x in Quality.DOWNLOADED])+') OR (e.status IN ('+','.join([str(x) for x in Quality.SNATCHED ])+')))', [search_date.toordinal()])
+        sqlResults = db.DBConnection().select('SELECT s.show_name, e.showid, e.season, e.episode, e.status, e.airdate FROM tv_episodes AS e' +
+                                              ' INNER JOIN tv_shows AS s ON (e.showid = s.tvdb_id)' +
+                                              ' WHERE e.airdate >= ' + str(search_date.toordinal()) +
+                                              ' AND (e.status IN (' + ','.join([str(x) for x in Quality.DOWNLOADED]) + ')' +
+                                              ' OR (e.status IN (' + ','.join([str(x) for x in Quality.SNATCHED]) + ')))'
+                                              )
         if not sqlResults:
             return []
-        
+
         for sqlShow in sqlResults:
             curShow = helpers.findCertainShow(sickbeard.showList, int(sqlShow["showid"]))
-            curEp = curShow.getEpisode(int(sqlShow["season"]),int(sqlShow["episode"]))
+            curEp = curShow.getEpisode(int(sqlShow["season"]), int(sqlShow["episode"]))
             searchString = self._get_episode_search_strings(curEp, add_string='PROPER|REPACK')
 
             for item in self._doSearch(searchString[0]):
                 title, url = self._get_title_and_url(item)
-                results.append(classes.Proper(title, url, datetime.datetime.today().toordinal()))
+                results.append(classes.Proper(title, url, datetime.datetime.today()))
 
         return results
 
