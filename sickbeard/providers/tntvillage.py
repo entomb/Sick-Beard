@@ -322,7 +322,7 @@ class TNTVillageProvider(generic.TorrentProvider):
             return Quality.FULLHDTV
         elif checkName(["fullHD", "(h264|xvid|divx)"], all) or checkName(["fullHD"], all) and not checkName(["BD"], all) and checkName(["webdl|webrip|web-dl|webdlmux|hdtvmux|sat|dlmux"], all):
             return Quality.FULLHDWEBDL
-        elif checkName(["BD", "720p", "(h264|xvid|divx)"], all) or  checkName(["BD", "h264|xvid|divx"], all) and not checkName(["fullHD"], all):
+        elif checkName(["BD", "720p", "(h264|xvid|divx)"], all) and not checkName(["fullHD"], all):
             return Quality.HDBLURAY
         elif checkName(["BD", "fullHd", "(h264|xvid|divx)"], all):
             return Quality.FULLHDBLURAY
@@ -423,7 +423,7 @@ class TNTVillageProvider(generic.TorrentProvider):
                         			if not title or not download_url:
                             				continue
 
-						title = title.replace("720p","").replace(" Versione 720p","").replace(" Versione 1080p","") + self._reverseQuality(self._episodeQuality(result))
+						title = title.replace(" 720p","").replace(" Versione 720p","").replace(" Versione 1080p","") + self._reverseQuality(self._episodeQuality(result))
 
                         			item = title, download_url, id, seeders, leechers
                         			logger.log(u"Found result: " + title + "(" + searchURL + ")", logger.DEBUG)
