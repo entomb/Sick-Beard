@@ -423,7 +423,7 @@ class TNTVillageProvider(generic.TorrentProvider):
                         			if not title or not download_url:
                             				continue
 
-						title = title.replace(" Versione 720p","").replace(" Versione 1080p","") + self._reverseQuality(self._episodeQuality(result))
+						title = title.replace("720p","").replace(" Versione 720p","").replace(" Versione 1080p","") + self._reverseQuality(self._episodeQuality(result))
 
                         			item = title, download_url, id, seeders, leechers
                         			logger.log(u"Found result: " + title + "(" + searchURL + ")", logger.DEBUG)
