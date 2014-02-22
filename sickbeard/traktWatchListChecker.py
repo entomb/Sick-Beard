@@ -298,7 +298,7 @@ class TraktChecker():
         if epObj == None:
             return
         with epObj.lock:
-            if epObj.status != SKIPPED:
+            if epObj.status in (SKIPPED, DOWNLOADABLE):
                 return
             logger.log(u"Setting episode s"+str(s)+"e"+str(e)+" of show " + show.name + " to archived")
 
@@ -314,7 +314,7 @@ class TraktChecker():
         if epObj == None:
             return
         with epObj.lock:
-            if epObj.status != SKIPPED:
+            if epObj.status in (SKIPPED, DOWNLOADABLE):
                 return
             logger.log(u"Setting episode s"+str(s)+"e"+str(e)+" of show " + show.name + " to wanted")
             # figure out what segment the episode is in and remember it so we can backlog it
