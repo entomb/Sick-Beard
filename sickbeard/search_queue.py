@@ -210,10 +210,10 @@ class RSSSearchQueueItem(generic_queue.QueueItem):
                     else:
                         sn_sk = show_sk[0]["season"]
                         ep_sk = show_sk[0]["episode"]
-                    if (int(sn_sk)*100+int(ep_sk)) < (int(sqlEp["season"])*100+int(sqlEp["episode"])) or not show_sk:
-                    	ep.status = common.SKIPPED
-		    else:
-                    	ep.status = common.WANTED
+                        if (int(sn_sk)*100+int(ep_sk)) < (int(sqlEp["season"])*100+int(sqlEp["episode"])) or not show_sk:
+                    	    ep.status = common.SKIPPED
+		        else:
+                    	    ep.status = common.WANTED
                 ep.saveToDB()
 
 class BacklogQueueItem(generic_queue.QueueItem):
