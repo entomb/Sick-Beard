@@ -194,6 +194,9 @@ class GenericProvider:
     def _get_season_search_strings(self, show, season, episode=None):
         return []
 
+    def _search_downloadable_season_search_strings(self, show, season=None):
+        return []
+
     def _get_episode_search_strings(self, ep_obj):
         return []
     
@@ -270,6 +273,95 @@ class GenericProvider:
             result.content = None 
             
             results.append(result)
+
+        return results
+
+    def findSeasonResultsDownloadable(self, show, season):
+
+        itemList = []
+        results = {}
+
+        for curString in self._search_downloadable_season_search_strings(show, season):
+            itemList += self._doSearch(curString)
+
+        for item in itemList:
+
+            (title, url) = self._get_title_and_url(item)
+
+            quality = self.getQuality(item)
+
+            # parse the file name
+            try:
+                myParser = NameParser(False)
+                parse_result = myParser.parse(title)
+            except InvalidNameException:
+                logger.log(u"Unable to parse the filename " + title + " into a valid episode", logger.WARNING)
+                continue
+
+            if not show.air_by_date:
+                # this check is meaningless for non-season searches
+                if (parse_result.season_number != None and parse_result.season_number != season) or (parse_result.season_number == None and season != 1):
+                    logger.log(u"The result " + title + " doesn't seem to be a valid episode for season " + str(season) + ", ignoring", logger.DEBUG)
+                    continue
+
+                # we just use the existing info for normal searches
+                actual_season = season
+                actual_episodes = parse_result.episode_numbers
+            
+            else:
+                if not parse_result.air_by_date:
+                    logger.log(u"This is supposed to be an air-by-date search but the result "+title+" didn't parse as one, skipping it", logger.DEBUG)
+                    continue
+                
+                myDB = db.DBConnection()
+                sql_results = myDB.select("SELECT season, episode FROM tv_episodes WHERE showid = ? AND airdate = ?", [show.tvdbid, parse_result.air_date.toordinal()])
+
+                if len(sql_results) != 1:
+                    logger.log(u"Tried to look up the date for the episode "+title+" but the database didn't give proper results, skipping it", logger.WARNING)
+                    continue
+                
+                actual_season = int(sql_results[0]["season"])
+                actual_episodes = [int(sql_results[0]["episode"])]
+
+            # make sure we want the episode
+            downloadableEp = True
+            for epNo in actual_episodes:
+                if not show.lookIfDownloadable(actual_season, epNo, quality):
+                    downloadableEp = False
+                    break
+            
+            if not downloadableEp:
+                logger.log(u"Ignoring result " + title + " because we don't want an episode that is " + Quality.qualityStrings[quality], logger.DEBUG)
+                continue
+
+            logger.log(u"Found result " + title + " at " + url, logger.DEBUG)
+
+            # make a result object
+            epObj = []
+            for curEp in actual_episodes:
+                epObj.append(show.getEpisode(actual_season, curEp))
+
+            result = self.getResult(epObj)
+            result.url = url
+            result.name = title
+            result.quality = quality
+            result.provider = self
+            result.content = None 
+
+            if len(epObj) == 1:
+                epNum = epObj[0].episode
+            elif len(epObj) > 1:
+                epNum = MULTI_EP_RESULT
+                logger.log(u"Separating multi-episode result to check for later - result contains episodes: " + str(parse_result.episode_numbers), logger.DEBUG)
+            elif len(epObj) == 0:
+                epNum = SEASON_RESULT
+                result.extraInfo = [show]
+                logger.log(u"Separating full season result to check for later", logger.DEBUG)
+
+            if epNum in results:
+                results[epNum].append(result)
+            else:
+                results[epNum] = [result]
 
         return results
 

@@ -156,6 +156,34 @@ class TNTVillageProvider(generic.TorrentProvider):
 
         return [search_string]
 
+    def _search_downloadable_season_search_strings(self, show, season=None):
+
+        search_string = {'Episode': []}
+
+        if not show:
+            return []
+
+        seasonEp = show.getAllEpisodes(season)
+
+        downloadableEp = [x for x in seasonEp if show.getOverview(x.status) in (Overview.SKIPPED, Overview.QUAL)]          
+
+        #If Every episode in Season is a wanted Episode then search for Season first
+        if downloadableEp == seasonEp and not show.air_by_date:
+            search_string = {'Season': [], 'Episode': []}
+            for show_name in set(show_name_helpers.allPossibleShowNames(show)):
+                ep_string = show_name +' S%02d' % int(season) #1) ShowName SXX   
+                search_string['Season'].append(ep_string)
+
+        #Building the search string with the episodes we need         
+        for ep_obj in downloadableEp:
+            search_string['Episode'] += self._get_episode_search_strings(ep_obj)[0]['Episode']
+
+        #If no Episode is needed then return an empty list
+        if not search_string['Episode']:
+            return []
+
+        return [search_string]
+
     def sanitizeSceneName_not_dotted(self, epname, ezrss=False):
     	"""
     	Takes a show name and returns the "scenified" version of it.

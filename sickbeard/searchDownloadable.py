@@ -84,19 +84,53 @@ class DownloadableSearcher:
         curDate = datetime.date.today().toordinal()
         fromDate = datetime.date.fromordinal(1)
 
+        if not which_shows and not curDate - self._last_DownloadableSearch >= self.cycleTime:
+            logger.log(u"Running limited Downloadable search on recently missed episodes only")
+            fromDate = datetime.date.today() - datetime.timedelta(days=7)
+
         self.amActive = True
         self.amPaused = False
 
+        #myDB = db.DBConnection()
+        #numSeasonResults = myDB.select("SELECT DISTINCT(season), showid FROM tv_episodes ep, tv_shows show WHERE season != 0 AND ep.showid = show.tvdb_id AND ep.airdate > ?", [fromDate.toordinal()])
 
-        for show in show_list:
+        # get separate lists of the season/date shows
+        #season_shows = [x for x in show_list if not x.air_by_date]
+        air_by_date_shows = [x for x in show_list if x.air_by_date]
 
-                self.currentSearchInfo = {'title': show.name}
+        # figure out how many segments of air by date shows we're going to do
+        air_by_date_segments = []
+        for cur_id in [x.tvdbid for x in air_by_date_shows]:
+            air_by_date_segments += self._get_air_by_date_segments(cur_id, fromDate) 
 
-                download_search_queue_item = search_queue.DownloadSearchQueueItem(show)
+        logger.log(u"Air-by-date segments: "+str(air_by_date_segments), logger.DEBUG)
 
-                sickbeard.searchQueueScheduler.action.add_item(download_search_queue_item)  #@UndefinedVariable
+        #totalSeasons = float(len(numSeasonResults) + len(air_by_date_segments))
+        #numSeasonsDone = 0.0
 
-        self._set_last_DownloadableSearch(curDate)
+        # go through non air-by-date shows and see if they need any episodes
+        for curShow in show_list:
+
+            if curShow.air_by_date:
+                segments = [x[1] for x in self._get_air_by_date_segments(curShow.tvdbid, fromDate)]
+            else:
+                segments = self._get_season_segments(curShow.tvdbid, fromDate)
+
+            for cur_segment in segments:
+
+                self.currentSearchInfo = {'title': curShow.name + " Season "+str(cur_segment)}
+
+                download_search_queue_item = search_queue.DownloadSearchQueueItem(curShow, cur_segment)
+
+                if not download_search_queue_item.availableSeason:
+                    logger.log(u"Nothing in season "+str(cur_segment)+" needs to be check if available, skipping this season", logger.DEBUG)
+                else:
+                   sickbeard.searchQueueScheduler.action.add_item(download_search_queue_item)  #@UndefinedVariable 
+
+        # don't consider this an actual downloadable search if we only did recent eps
+        # or if we only did certain shows
+        if fromDate == datetime.date.fromordinal(1) and not which_shows:
+            self._set_last_DownloadableSearch(curDate)
 
         self.amActive = False
         self._resetPI()
@@ -117,6 +151,30 @@ class DownloadableSearcher:
 
         self._last_DownloadableSearch = last_DownloadableSearch
         return self._last_DownloadableSearch
+
+    def _get_season_segments(self, tvdb_id, fromDate):
+        myDB = db.DBConnection()
+        sqlResults = myDB.select("SELECT DISTINCT(season) as season FROM tv_episodes WHERE showid = ? AND season > 0 and airdate > ?", [tvdb_id, fromDate.toordinal()])
+        return [int(x["season"]) for x in sqlResults]
+
+    def _get_air_by_date_segments(self, tvdb_id, fromDate):
+        # query the DB for all dates for this show
+        myDB = db.DBConnection()
+        num_air_by_date_results = myDB.select("SELECT airdate, showid FROM tv_episodes ep, tv_shows show WHERE season != 0 AND ep.showid = show.tvdb_id AND show.paused = 0 ANd ep.airdate > ? AND ep.showid = ?",
+                                 [fromDate.toordinal(), tvdb_id])
+
+        # break them apart into month/year strings
+        air_by_date_segments = []
+        for cur_result in num_air_by_date_results:
+            cur_date = datetime.date.fromordinal(int(cur_result["airdate"]))
+            cur_date_str = str(cur_date)[:7]
+            cur_tvdb_id = int(cur_result["showid"])
+            
+            cur_result_tuple = (cur_tvdb_id, cur_date_str)
+            if cur_result_tuple not in air_by_date_segments:
+                air_by_date_segments.append(cur_result_tuple)
+        
+        return air_by_date_segments
 
     def _set_last_DownloadableSearch(self, when):
 

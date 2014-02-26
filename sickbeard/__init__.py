@@ -165,7 +165,7 @@ ALLOW_HIGH_PRIORITY = None
 
 SEARCH_FREQUENCY = None
 BACKLOG_SEARCH_FREQUENCY = 21
-DOWNLOADABLE_SEARCH_FREQUENCY = 1
+DOWNLOADABLE_SEARCH_FREQUENCY = 7
 
 MIN_SEARCH_FREQUENCY = 10
 
@@ -1041,7 +1041,7 @@ def initialize(consoleLogging=True):
         backlogSearchScheduler.action.cycleTime = BACKLOG_SEARCH_FREQUENCY
 
         downloadableSearchScheduler = searchDownloadable.DownloadableSearchScheduler(searchDownloadable.DownloadableSearcher(),
-                                                                      cycleTime=datetime.timedelta(hours=1),
+                                                                      cycleTime=datetime.timedelta(minutes=get_downloadable_search_cycle_time()),
                                                                       threadName="DOWNLOADABLE_SEARCH",
                                                                       runImmediately=True)
         downloadableSearchScheduler.action.cycleTime = DOWNLOADABLE_SEARCH_FREQUENCY

@@ -346,6 +346,9 @@ class QueueItemAdd(ShowQueueItem):
         if self.default_status == WANTED:
             logger.log(u"Launching backlog for this show since its episodes are WANTED")
             sickbeard.backlogSearchScheduler.action.searchBacklog([self.show]) #@UndefinedVariable
+	elif self.default_status == SKIPPED:
+	    logger.log(u"Launching downloadable search for this show since its episodes are SKIPPED")
+            sickbeard.downloadableSearchScheduler.action.searchDownloadable([self.show]) #@UndefinedVariable
 
         self.show.writeMetadata()
         self.show.populateCache()    

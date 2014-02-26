@@ -340,7 +340,7 @@ def findEpisode(episode, manualSearch=False):
 
     return bestResult
 
-def findSeason(show, season):
+def findSeason(show, season, type="wantEP"):
 
     logger.log(u"Searching for stuff we need from "+show.name+" season "+str(season))
 
@@ -354,7 +354,14 @@ def findSeason(show, season):
             continue
 
         try:
-            curResults = curProvider.findSeasonResults(show, season)
+
+            if type == "wantEP":
+                curResults = curProvider.findSeasonResults(show, season)
+            elif type == "skipEp":
+                curResults = curProvider.findSeasonResultsDownloadable(show, season)
+	    else:
+		logger.log(u"Invalid provider name - this is a coding error, report it please", logger.ERROR)
+		return None
 
             # make a list of all the results for this provider
             for curEp in curResults:
@@ -410,12 +417,18 @@ def findSeason(show, season):
 
         allWanted = True
         anyWanted = False
-        for curEpNum in allEps:
-            if not show.wantEpisode(season, curEpNum, seasonQual):
-                allWanted = False
-            else:
-                anyWanted = True
-
+        if type == "wantEP":
+            for curEpNum in allEps:
+                if not show.wantEpisode(season, curEpNum, seasonQual):
+                    allWanted = False
+                else:
+                    anyWanted = True
+        elif type == "skipEp":
+            for curEpNum in allEps:
+                if not show.lookIfDownloadable(season, curEpNum, seasonQual):
+                    allWanted = False
+                else:
+                    anyWanted = True
         # if we need every ep in the season and there's nothing better then just download this and be done with it
         if allWanted and bestSeasonNZB.quality == highest_quality_overall:
             logger.log(u"Every ep in this season is needed, downloading the whole "+bestSeasonNZB.provider.providerType+" "+bestSeasonNZB.name)

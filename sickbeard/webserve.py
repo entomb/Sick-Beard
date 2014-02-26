@@ -3354,7 +3354,6 @@ class Home:
         else:
             subtitles = 0
 
-
         if tvdbLang and tvdbLang in tvdb_api.Tvdb().config['valid_languages']:
             tvdb_lang = tvdbLang
         else:
@@ -3378,6 +3377,7 @@ class Home:
         #If directCall from mass_edit_update no scene exceptions handling
         if directCall:
             do_update_exceptions = False
+            do_downloadable_search = False
         else:
             if set(exceptions_list) == set(showObj.exceptions):
                 do_update_exceptions = False
@@ -3387,6 +3387,10 @@ class Home:
         errors = []
         with showObj.lock:
             newQuality = Quality.combineQualities(map(int, anyQualities), map(int, bestQualities))
+            if newQuality != showObj.quality:
+               do_downloadable_search = True 
+            else:
+               do_downloadable_search = False
             showObj.quality = newQuality
 
             # reversed for now
@@ -3437,9 +3441,18 @@ class Home:
         if do_update_exceptions:
             try:
                 scene_exceptions.update_scene_exceptions(showObj.tvdbid, exceptions_list) # @UndefinedVariable
+                do_downloadable_search = True 
                 time.sleep(1)
             except exceptions.CantUpdateException, e:
                 errors.append("Unable to force an update on scene exceptions of the show.")
+
+        if do_downloadable_search:
+            try:
+                sickbeard.downloadableSearchScheduler.action.searchDownloadable([showObj]) #@UndefinedVariable
+                time.sleep(1)
+            except exceptions.CantUpdateException, e:
+                errors.append("Unable to force an update on the show.")
+
 
         if directCall:
             return errors

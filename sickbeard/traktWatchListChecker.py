@@ -33,6 +33,7 @@ class TraktChecker():
     def __init__(self):
         self.todoWanted = []
         self.todoBacklog = []
+        self.todoDownloadableSearch = []
 	self.ShowWatchlist = []
 	self.EpisodeWatchlist = []
 
@@ -239,7 +240,7 @@ class TraktChecker():
 		self.addDefaultShow(show["tvdb_id"], show["title"], WANTED)
 
 	    if int(sickbeard.TRAKT_METHOD_ADD) == 1:
-		newShow = helpers.findCertainShow(sickbeard.showList, int(show["tvdb_id"]))
+	        newShow = helpers.findCertainShow(sickbeard.showList, int(show["tvdb_id"]))
 		if newShow is not None:
 		    self.setEpisodeToWanted(newShow, 1, 1)
 		    if not self.episode_in_watchlist(newShow.tvdbid, 1, 1):
@@ -256,7 +257,7 @@ class TraktChecker():
         """
         logger.log(u"Start looking if some episode in WatchList has to be set WANTED", logger.DEBUG)
         for show in self.EpisodeWatchlist:
-            self.addDefaultShow(show["tvdb_id"], show["title"], SKIPPED)
+#            self.addDefaultShow(show["tvdb_id"], show["title"], SKIPPED)
             newShow = helpers.findCertainShow(sickbeard.showList, int(show["tvdb_id"]))
             for episode in show["episodes"]:
                 if newShow is not None:

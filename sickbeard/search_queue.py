@@ -77,39 +77,77 @@ class SearchQueue(generic_queue.GenericQueue):
             generic_queue.GenericQueue.add_item(self, item)
         elif isinstance(item, FailedQueueItem) and not self.is_in_queue(item.show, item.segment):
             generic_queue.GenericQueue.add_item(self, item)
-	elif isinstance(item, DownloadSearchQueueItem): 
+	elif isinstance(item, DownloadSearchQueueItem) and not self.is_in_queue(item.show, item.segment):
             generic_queue.GenericQueue.add_item(self, item)
         else:
             logger.log(u"Not adding item, it's already in the queue", logger.DEBUG)
 
 class DownloadSearchQueueItem(generic_queue.QueueItem):
-    def __init__(self, show):
+    def __init__(self, show, segment):
         generic_queue.QueueItem.__init__(self, 'Downloadable Search', DOWNLOADABLE_SEARCH)
         self.priority = generic_queue.QueuePriorities.LOW
         self.thread_name = 'DOWNLOADABLE_SEARCH-' + str(show.tvdbid)
 
         self.show = show
+        self.segment = segment
 
-    def execute(self):
-        generic_queue.QueueItem.execute(self)
-
-        logger.log(u"Seeing if is available any episodes from " + self.show.name)
+        logger.log(u"Seeing if is available any episodes from " + self.show.name + " season " + str(self.segment))
 
         myDB = db.DBConnection()
-        sql_selection="SELECT show_name, tvdb_id, season, episode, paused FROM (SELECT * FROM tv_shows s,tv_episodes e WHERE s.tvdb_id = e.showid) T1 WHERE T1.tvdb_id = ? and T1.episode_id IN (SELECT T2.episode_id FROM tv_episodes T2 WHERE T2.showid = T1.tvdb_id and T2.status in (?) and T2.season!=0 and airdate is not null ORDER BY T2.season,T2.episode LIMIT 1) ORDER BY T1.show_name,season,episode"
-        episodeToSearch = myDB.select(sql_selection,[self.show.tvdbid, common.SKIPPED])
-	
-	if episodeToSearch:
-		
-	    ep_obj = self.show.getEpisode(episodeToSearch[0]["season"], episodeToSearch[0]["episode"])
 
-	    foundEpisode = search.findEpisode(ep_obj, manualSearch=True)
-            if foundEpisode:
-                with ep_obj.lock:
-                    ep_obj.status = common.DOWNLOADABLE
-                    ep_obj.saveToDB()
+        # see if there is anything in this season worth searching for
+        if not self.show.air_by_date:
+            statusResults = myDB.select("SELECT status FROM tv_episodes WHERE showid = ? AND season = ?", [self.show.tvdbid, self.segment])
+        else:
+            segment_year, segment_month = map(int, self.segment.split('-'))
+            min_date = datetime.date(segment_year, segment_month, 1)
 
-            generic_queue.QueueItem.finish(self)
+            # it's easier to just hard code this than to worry about rolling the year over or making a month length map
+            if segment_month == 12:
+                max_date = datetime.date(segment_year, 12, 31)
+            else:
+                max_date = datetime.date(segment_year, segment_month + 1, 1) - datetime.timedelta(days=1)
+
+            statusResults = myDB.select("SELECT status FROM tv_episodes WHERE showid = ? AND airdate >= ? AND airdate <= ?",
+                                        [self.show.tvdbid, min_date.toordinal(), max_date.toordinal()])
+
+        anyQualities, bestQualities = common.Quality.splitQuality(self.show.quality) #@UnusedVariable
+        self.availableSeason = self._available_any_episodes(statusResults, bestQualities)
+
+    def execute(self):
+
+        generic_queue.QueueItem.execute(self)
+
+        results = search.findSeason(self.show, self.segment, "skipEp")
+
+        # mark downloadable whatever we find
+	for result in results:
+            for curEpObj in result.episodes:
+                with curEpObj.lock:
+                    curEpObj.status = common.DOWNLOADABLE
+                    curEpObj.saveToDB()
+
+        self.finish()
+
+    def _available_any_episodes(self, statusResults, bestQualities):
+
+        availableSeason = False
+
+        # check through the list of statuses to see if we want any
+        for curStatusResult in statusResults:
+            curCompositeStatus = int(curStatusResult["status"])
+            curStatus, curQuality = common.Quality.splitCompositeStatus(curCompositeStatus)
+
+            if bestQualities:
+                highestBestQuality = max(bestQualities)
+            else:
+                highestBestQuality = 0
+
+            if curStatus == common.SKIPPED:
+                availableSeason = True
+                break
+
+        return availableSeason
 
 class ManualSearchQueueItem(generic_queue.QueueItem):
     def __init__(self, ep_obj):
@@ -201,19 +239,18 @@ class RSSSearchQueueItem(generic_queue.QueueItem):
                 else:
 
                     myDB = db.DBConnection()
-                    sql_selection="SELECT show_name, tvdb_id, season, episode, paused FROM (SELECT * FROM tv_shows s,tv_episodes e WHERE s.tvdb_id = e.showid) T1 WHERE T1.paused = 0 and T1.episode_id IN (SELECT T2.episode_id FROM tv_episodes T2 WHERE T2.showid = T1.tvdb_id and T2.status in (?,?,?,?) and T2.season!=0 ORDER BY T2.season,T2.episode LIMIT 1) ORDER BY T1.show_name,season,episode"
-                    results = myDB.select(sql_selection, [common.SNATCHED, common.WANTED, common.SKIPPED, common.DOWNLOADABLE])
+                    sql_selection="SELECT show_name, tvdb_id, season, episode, paused FROM (SELECT * FROM tv_shows s,tv_episodes e WHERE s.tvdb_id = e.showid) T1 WHERE T1.paused = 0 and T1.episode_id IN (SELECT T2.episode_id FROM tv_episodes T2 WHERE T2.showid = T1.tvdb_id and T2.status in (?,?,?) and T2.season!=0 ORDER BY T2.season,T2.episode LIMIT 1) ORDER BY T1.show_name,season,episode"
+                    results = myDB.select(sql_selection, [common.SNATCHED, common.WANTED, common.SKIPPED])
 
                     show_sk = [show for show in results if show["tvdb_id"] == sqlEp["showid"]]
+                    sn_sk = show_sk[0]["season"]
+                    ep_sk = show_sk[0]["episode"]
 		    if not show_sk:
 			ep.status = common.WANTED
-                    else:
-                        sn_sk = show_sk[0]["season"]
-                        ep_sk = show_sk[0]["episode"]
-                        if (int(sn_sk)*100+int(ep_sk)) < (int(sqlEp["season"])*100+int(sqlEp["episode"])) or not show_sk:
-                    	    ep.status = common.SKIPPED
-		        else:
-                    	    ep.status = common.WANTED
+                    if (int(sn_sk)*100+int(ep_sk)) < (int(sqlEp["season"])*100+int(sqlEp["episode"])) or not show_sk:
+                    	ep.status = common.SKIPPED
+		    else:
+                    	ep.status = common.WANTED
                 ep.saveToDB()
 
 class BacklogQueueItem(generic_queue.QueueItem):
