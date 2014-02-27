@@ -1122,13 +1122,13 @@ class TVShow(object):
 
         # if we know we don't want it then just say no
         if epStatus in (IGNORED, ARCHIVED) and not manualSearch:
-            logger.log(u"Ep is skipped, not bothering", logger.DEBUG)
+            logger.log(u"Ep is ignored/archived, not bothering", logger.DEBUG)
             return False
 
         # if it's one of these then we want it as long as it's in our allowed initial qualities
         if quality in anyQualities + bestQualities:
-            if epStatus in (UNAIRED, SKIPPED):
-                logger.log(u"Ep is wanted/unaired/skipped, definitely get it", logger.DEBUG)
+            if epStatus in (WANTED, UNAIRED, SKIPPED):
+                logger.log(u"Ep is wanted/unaired/skipped, definitely mark it downloadable", logger.DEBUG)
                 return True
             elif manualSearch:
                 logger.log(u"Usually I would ignore this ep but because you forced the search I'm overriding the default and allowing the quality", logger.DEBUG)

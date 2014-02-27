@@ -196,9 +196,9 @@ def searchForNeededEpisodes():
         # pick a single result for each episode, respecting existing results
         for curEp in curFoundResults:
 
-            if curEp.show.paused:
-                logger.log(u"Show "+curEp.show.name+" is paused, ignoring all RSS items for "+curEp.prettyName(), logger.DEBUG)
-                continue
+#            if curEp.show.paused:
+#                logger.log(u"Show "+curEp.show.name+" is paused, ignoring all RSS items for "+curEp.prettyName(), logger.DEBUG)
+#                continue
 
             # find the best result for the current episode
             bestResult = None

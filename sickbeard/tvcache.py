@@ -387,7 +387,7 @@ class TVCache():
             curQuality = int(curResult["quality"])
 
             # if the show says we want that episode then add it to the list
-            if not showObj.wantEpisode(curSeason, curEp, curQuality, manualSearch):
+            if not showObj.wantEpisode(curSeason, curEp, curQuality, manualSearch) and not showObj.lookIfDownloadable(curSeason, curEp, curQuality, manualSearch):
                 logger.log(u"Skipping " + curResult["name"] + " because we don't want an episode that's " + Quality.qualityStrings[curQuality], logger.DEBUG)
 
             else:

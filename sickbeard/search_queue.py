@@ -204,10 +204,23 @@ class RSSSearchQueueItem(generic_queue.QueueItem):
 
         if not len(foundResults):
             logger.log(u"No needed episodes found on the RSS feeds")
-        else:
-            for curResult in foundResults:
-                search.snatchEpisode(curResult)
-                time.sleep(2)
+
+        for curResult in foundResults:
+
+            for curEpObj in curResult.episodes:
+
+                showObj = helpers.findCertainShow(sickbeard.showList, int(curEpObj.show.tvdbid))
+                if not showObj:
+                    continue
+
+                if showObj.wantEpisode(curEpObj.season, curEpObj.episode, curResult.quality) and not curEpObj.show.paused:
+                    search.snatchEpisode(curResult)
+                    time.sleep(2)
+                elif showObj.lookIfDownloadable(curEpObj.season, curEpObj.episode, curResult.quality):
+                    # mark downloadable whatever we find
+                    with curEpObj.lock:
+                        curEpObj.status = common.DOWNLOADABLE
+                        curEpObj.saveToDB()
 
         generic_queue.QueueItem.finish(self)
 
