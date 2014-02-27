@@ -319,7 +319,7 @@ class TNTVillageProvider(generic.TorrentProvider):
 
         checkName = lambda list, func: func([re.search(x, name, re.I) for x in list])
 
-        if checkName(["(tv|sat|hdtv|hdtvrip|hdtvmux|webdl|webrip|web-dl|webdlmux|dlrip|dlmux|dtt|bdmux)","(xvid|h264|divx)"], all) and not checkName(["(720|1080)[pi]"], all):
+        if checkName(["(tv|sat|hdtv|hdtvrip|hdtvmux|webdl|webrip|web-dl|webdlmux|webmux|dlrip|dlmux|dtt|bdmux)","(xvid|h264|divx)"], all) and not checkName(["(720|1080)[pi]"], all):
             return Quality.SDTV
         elif checkName(["(dvdrip|dvdmux|dvd)"], any) and not checkName(["(720|1080)[pi]"], all) and not checkName(["(sat|tv)"], all) and not checkName(["BD"], all) and not checkName(["fullHD"], all):
             return Quality.SDDVD
