@@ -3,7 +3,7 @@ Sick Beard
 
 This fork is based on mr-orange ThePirateBay branch https://github.com/mr-orange/Sick-Beard
 
-Feature list of his branch:
+Feature list of this branch:
 - Support for TNTVillage torrent provider
 - Language default to IT for new show/importing existing shows (if available on TVDB)
 - Automatic remove of downloaded torrent on trasmission client
