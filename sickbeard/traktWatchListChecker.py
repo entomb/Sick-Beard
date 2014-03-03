@@ -89,7 +89,7 @@ class TraktChecker():
 					logger.log(u"Episode: tvdb_id " + show["tvdb_id"] + ", Title " + show["title"] + ", Season " + str(episode["season"]) + ", Episode" + str(episode["number"]) + " not in Sickberad ShowList", logger.DEBUG)
 					continue
 					
-				if ep_obj.status != WANTED and ep_obj.status != UNKNOWN ep_obj.status != SNATCHED and ep_obj.status != SNATCHED_PROPER:
+				if ep_obj.status != WANTED and ep_obj.status != UNKNOWN and ep_obj.status != SNATCHED and ep_obj.status != SNATCHED_PROPER:
 					if self.episode_in_watchlist(show["tvdb_id"], episode["season"], episode["number"]):
 					        logger.log(u"Removing episode: tvdb_id " + show["tvdb_id"] + ", Title " + show["title"] + ", Season " + str(episode["season"]) + ", Episode " + str(episode["number"]) + ", Status " + str(ep_obj.status) + " from Watchlist", logger.DEBUG)
 						self.update_watchlist("episode", "remove", show["tvdb_id"], episode["season"], episode["number"]) 
