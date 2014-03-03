@@ -33,7 +33,6 @@ class TraktChecker():
     def __init__(self):
         self.todoWanted = []
         self.todoBacklog = []
-        self.todoDownloadableSearch = []
 	self.ShowWatchlist = []
 	self.EpisodeWatchlist = []
 
@@ -293,7 +292,7 @@ class TraktChecker():
 
     def setEpisodeToArchived(self, show, s, e):
         """
-        Sets an episode to archived, only is it is currently skipped
+        Sets an episode to archived, only is it is currently skipped or Downloadable
         """
         epObj = show.getEpisode(int(s), int(e))
         if epObj == None:
@@ -309,7 +308,7 @@ class TraktChecker():
 
     def setEpisodeToWanted(self, show, s, e):
         """
-        Sets an episode to wanted, only is it is currently skipped
+        Sets an episode to wanted, only is it is currently skipped or Downloadable
         """
         epObj = show.getEpisode(int(s), int(e))
         if epObj == None:
@@ -334,13 +333,13 @@ class TraktChecker():
     def manageNewShow(self, show):
         episodes = [i for i in self.todoWanted if i[0] == show.tvdbid]
         for episode in episodes:
-            self.todoWanted.remove(episode)
             if episode[1] == -1 and sickbeard.TRAKT_START_PAUSED:
                 show.paused = 1
                 continue
             self.setEpisodeToWanted(show, episode[1], episode[2])
 	    if not self.episode_in_watchlist(show.tvdbid, episode[1], episode[2]):
 	        self.update_watchlist("episode", "add", show.tvdbid,  episode[1], episode[2]) 
+            self.todoWanted.remove(episode)
         self.startBacklog(show)
 
     def startBacklog(self, show):
