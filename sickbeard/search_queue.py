@@ -226,7 +226,7 @@ class RSSSearchQueueItem(generic_queue.QueueItem):
 
     def _changeMissingEpisodes(self):
 
-        logger.log(u"Changing all old missing episodes to status WANTED")
+        logger.log(u"Changing all old missing episodes to status WANTED/SKIPPED")
 
         curDate = datetime.date.today().toordinal()
 
