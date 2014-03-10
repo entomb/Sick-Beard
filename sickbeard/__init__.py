@@ -169,7 +169,7 @@ DOWNLOADABLE_SEARCH_FREQUENCY = 7
 
 MIN_SEARCH_FREQUENCY = 10
 
-DEFAULT_SEARCH_FREQUENCY = 60
+DEFAULT_SEARCH_FREQUENCY = 40
 
 EZRSS = False
 
@@ -272,6 +272,7 @@ NZBGET_USERNAME = None
 NZBGET_PASSWORD = None
 NZBGET_CATEGORY = None
 NZBGET_HOST = None
+NZBGET_USE_HTTPS = False
 
 TORRENT_USERNAME = None
 TORRENT_PASSWORD = None
@@ -443,7 +444,7 @@ GIT_PATH = None
 
 IGNORE_WORDS = "german,french,core2hd,dutch,swedish,reenc,MrLss"
 
-CALENDAR_UNPROTECTED = False
+CALENDAR_PROTECTED = False
 
 __INITIALIZED__ = False
 
@@ -462,7 +463,7 @@ def initialize(consoleLogging=True):
         global ACTUAL_LOG_DIR, LOG_DIR, WEB_PORT, WEB_LOG, ENCRYPTION_VERSION, WEB_ROOT, WEB_USERNAME, WEB_PASSWORD, WEB_HOST, WEB_IPV6, USE_API, API_KEY, ENABLE_HTTPS, HTTPS_CERT, HTTPS_KEY, \
                 USE_NZBS, USE_TORRENTS, NZB_METHOD, NZB_DIR, DOWNLOAD_PROPERS, ALLOW_HIGH_PRIORITY, TORRENT_METHOD, \
                 SAB_USERNAME, SAB_PASSWORD, SAB_APIKEY, SAB_CATEGORY, SAB_HOST, \
-                NZBGET_USERNAME, NZBGET_PASSWORD, NZBGET_CATEGORY, NZBGET_HOST, currentSearchScheduler, backlogSearchScheduler, downloadableSearchScheduler, \
+                NZBGET_USERNAME, NZBGET_PASSWORD, NZBGET_CATEGORY, NZBGET_HOST, NZBGET_USE_HTTPS, currentSearchScheduler, backlogSearchScheduler, downloadableSearchScheduler, \
                 TORRENT_USERNAME, TORRENT_PASSWORD, TORRENT_HOST, TORRENT_PATH, TORRENT_RATIO, TORRENT_PAUSED, TORRENT_HIGH_BANDWIDTH, TORRENT_LABEL, \
                 USE_XBMC, XBMC_NOTIFY_ONSNATCH, XBMC_NOTIFY_ONDOWNLOAD, XBMC_NOTIFY_ONSUBTITLEDOWNLOAD, XBMC_UPDATE_FULL, XBMC_UPDATE_ONLYFIRST, \
                 XBMC_UPDATE_LIBRARY, XBMC_HOST, XBMC_USERNAME, XBMC_PASSWORD, \
@@ -498,7 +499,7 @@ def initialize(consoleLogging=True):
                 USE_LISTVIEW, METADATA_XBMC, METADATA_XBMC_12PLUS, METADATA_MEDIABROWSER, METADATA_PS3, metadata_provider_dict, \
                 NEWZBIN, NEWZBIN_USERNAME, NEWZBIN_PASSWORD, GIT_PATH, MOVE_ASSOCIATED_FILES, \
                 GUI_NAME, HOME_LAYOUT, HISTORY_LAYOUT, DISPLAY_SHOW_SPECIALS, COMING_EPS_LAYOUT, COMING_EPS_SORT, COMING_EPS_DISPLAY_PAUSED, COMING_EPS_MISSED_RANGE, DATE_PRESET, TIME_PRESET, TIME_PRESET_W_SECONDS, \
-                METADATA_WDTV, METADATA_TIVO, IGNORE_WORDS,  CALENDAR_UNPROTECTED, CREATE_MISSING_SHOW_DIRS, \
+                METADATA_WDTV, METADATA_TIVO, IGNORE_WORDS,  CALENDAR_PROTECTED, CREATE_MISSING_SHOW_DIRS, \
                 ADD_SHOWS_WO_DIR, USE_SUBTITLES, SUBTITLES_LANGUAGES, SUBTITLES_DIR, SUBTITLES_SERVICES_LIST, SUBTITLES_SERVICES_ENABLED, SUBTITLES_HISTORY, SUBTITLES_FINDER_FREQUENCY, subtitlesFinderScheduler, \
                 USE_FAILED_DOWNLOADS, DELETE_FAILED, ANON_REDIRECT, LOCALHOST_IP
 
@@ -590,13 +591,6 @@ def initialize(consoleLogging=True):
         if not re.match(r'\d+\|[^|]+(?:\|[^|]+)*', ROOT_DIRS):
             ROOT_DIRS = ''
 
-        proxies = urllib.getproxies()
-        proxy_url = None
-        if 'http' in proxies:
-            proxy_url = proxies['http']
-        elif 'ftp' in proxies:
-            proxy_url = proxies['ftp']
-
         # Set our common tvdb_api options here
         TVDB_API_PARMS = {'apikey': TVDB_API_KEY,
                           'language': 'en',
@@ -612,8 +606,8 @@ def initialize(consoleLogging=True):
 
         PROVIDER_ORDER = check_setting_str(CFG, 'General', 'provider_order', '').split()
 
-        NAMING_PATTERN = check_setting_str(CFG, 'General', 'naming_pattern', '')
-        NAMING_ABD_PATTERN = check_setting_str(CFG, 'General', 'naming_abd_pattern', '')
+        NAMING_PATTERN = check_setting_str(CFG, 'General', 'naming_pattern', '%SN - %Sx%0E - %EN')
+        NAMING_ABD_PATTERN = check_setting_str(CFG, 'General', 'naming_abd_pattern', '%SN - %A-D - %EN')
         NAMING_CUSTOM_ABD = check_setting_int(CFG, 'General', 'naming_custom_abd', 0)
         NAMING_MULTI_EP = check_setting_int(CFG, 'General', 'naming_multi_ep', 1)
         NAMING_FORCE_FOLDERS = naming.check_force_season_folders()
@@ -751,6 +745,7 @@ def initialize(consoleLogging=True):
         NZBGET_PASSWORD = check_setting_str(CFG, 'NZBget', 'nzbget_password', 'tegbzn6789')
         NZBGET_CATEGORY = check_setting_str(CFG, 'NZBget', 'nzbget_category', 'tv')
         NZBGET_HOST = check_setting_str(CFG, 'NZBget', 'nzbget_host', '')
+        NZBGET_USE_HTTPS = bool(check_setting_int(CFG, 'NZBget', 'nzbget_use_https', 0))
 
         TORRENT_USERNAME = check_setting_str(CFG, 'TORRENT', 'torrent_username', '')
         TORRENT_PASSWORD = check_setting_str(CFG, 'TORRENT', 'torrent_password', '')
@@ -908,8 +903,10 @@ def initialize(consoleLogging=True):
         GIT_PATH = check_setting_str(CFG, 'General', 'git_path', '')
 
         IGNORE_WORDS = check_setting_str(CFG, 'General', 'ignore_words', IGNORE_WORDS)
+        if not IGNORE_WORDS:
+            IGNORE_WORDS = "german,french,core2hd,dutch,swedish,reenc,MrLss"
         
-        CALENDAR_UNPROTECTED = bool(check_setting_int(CFG, 'General', 'calendar_unprotected', 0))
+        CALENDAR_PROTECTED = bool(check_setting_int(CFG, 'General', 'calendar_protected', 0))
 
         EXTRA_SCRIPTS = [x.strip() for x in check_setting_str(CFG, 'General', 'extra_scripts', '').split('|') if x.strip()]
 
@@ -1362,7 +1359,7 @@ def save_config():
     new_config['General']['extra_scripts'] = '|'.join(EXTRA_SCRIPTS)
     new_config['General']['git_path'] = GIT_PATH
     new_config['General']['ignore_words'] = IGNORE_WORDS
-    new_config['General']['calendar_unprotected'] = int(CALENDAR_UNPROTECTED)
+    new_config['General']['calendar_protected'] = int(CALENDAR_PROTECTED)
 
     new_config['Blackhole'] = {}
     new_config['Blackhole']['nzb_dir'] = NZB_DIR
@@ -1483,6 +1480,7 @@ def save_config():
     new_config['NZBget']['nzbget_password'] = helpers.encrypt(NZBGET_PASSWORD, ENCRYPTION_VERSION)
     new_config['NZBget']['nzbget_category'] = NZBGET_CATEGORY
     new_config['NZBget']['nzbget_host'] = NZBGET_HOST
+    new_config['NZBget']['nzbget_use_https'] = int(NZBGET_USE_HTTPS)
 
     new_config['TORRENT'] = {}
     new_config['TORRENT']['torrent_username'] = TORRENT_USERNAME

@@ -953,7 +953,7 @@ class ConfigGeneral:
     def saveGeneral(self, log_dir=None, web_port=None, web_log=None, encryption_version=None, web_ipv6=None,
                     update_shows_on_start=None, launch_browser=None, web_username=None, use_api=None, api_key=None,
                     web_password=None, version_notify=None, enable_https=None, https_cert=None, https_key=None, sort_article=None,
-                    anon_redirect=None, git_path=None, calendar_unprotected=None, date_preset=None, time_preset=None):
+                    anon_redirect=None, git_path=None, calendar_protected=None, date_preset=None, time_preset=None):
 
         results = []
 
@@ -967,13 +967,16 @@ class ConfigGeneral:
         sickbeard.SORT_ARTICLE = config.checkbox_to_value(sort_article)
         sickbeard.ANON_REDIRECT = anon_redirect
         sickbeard.GIT_PATH = git_path
-        sickbeard.CALENDAR_UNPROTECTED = config.checkbox_to_value(calendar_unprotected)
+        
+        # Update value_on to the last encryption_version available:
+        sickbeard.ENCRYPTION_VERSION = config.checkbox_to_value(encryption_version, value_on=1, value_off=0)
+        sickbeard.CALENDAR_PROTECTED = config.checkbox_to_value(calendar_protected)
+        
         # sickbeard.LOG_DIR is set in config.change_LOG_DIR()
-
         sickbeard.WEB_PORT = config.to_int(web_port)
         sickbeard.WEB_IPV6 = config.checkbox_to_value(web_ipv6)
         # sickbeard.WEB_LOG is set in config.change_LOG_DIR()
-        sickbeard.ENCRYPTION_VERSION = config.checkbox_to_value(encryption_version)
+                
         sickbeard.WEB_USERNAME = web_username
         sickbeard.WEB_PASSWORD = web_password
 
@@ -990,11 +993,6 @@ class ConfigGeneral:
 
         sickbeard.USE_API = config.checkbox_to_value(use_api)
         sickbeard.API_KEY = api_key
-
-        if enable_https == "on":
-            enable_https = 1
-        else:
-            enable_https = 0
 
         sickbeard.ENABLE_HTTPS = config.checkbox_to_value(enable_https)
 
@@ -1028,7 +1026,7 @@ class ConfigSearch:
 
     @cherrypy.expose
     def saveSearch(self, use_nzbs=None, use_torrents=None, nzb_dir=None, sab_username=None, sab_password=None,
-                    sab_apikey=None, sab_category=None, sab_host=None, nzbget_username=None, nzbget_password=None, nzbget_category=None, nzbget_host=None,
+                    sab_apikey=None, sab_category=None, sab_host=None, nzbget_username=None, nzbget_password=None, nzbget_category=None, nzbget_host=None, nzbget_use_https=None,
                     nzb_method=None, torrent_method=None, usenet_retention=None, search_frequency=None, download_propers=None, allow_high_priority=None,
                     torrent_dir=None, torrent_username=None, torrent_password=None, torrent_host=None, torrent_label=None, torrent_path=None,
                     torrent_ratio=None, torrent_paused=None, torrent_high_bandwidth=None, ignore_words=None):
@@ -1050,7 +1048,7 @@ class ConfigSearch:
         sickbeard.TORRENT_METHOD = torrent_method
         sickbeard.USENET_RETENTION = sickbeard.USENET_RETENTION = config.to_int(usenet_retention, default=500)
 
-        sickbeard.IGNORE_WORDS = ignore_words if ignore_words else ""
+        sickbeard.IGNORE_WORDS = ignore_words if ignore_words else "german,french,core2hd,dutch,swedish,reenc,MrLss"
 
         sickbeard.DOWNLOAD_PROPERS = config.checkbox_to_value(download_propers)
         if sickbeard.DOWNLOAD_PROPERS:
@@ -1070,6 +1068,7 @@ class ConfigSearch:
         sickbeard.NZBGET_PASSWORD = nzbget_password
         sickbeard.NZBGET_CATEGORY = nzbget_category
         sickbeard.NZBGET_HOST = config.clean_host(nzbget_host)
+        sickbeard.NZBGET_USE_HTTPS = config.checkbox_to_value(nzbget_use_https)
 
         sickbeard.TORRENT_USERNAME = torrent_username
         sickbeard.TORRENT_PASSWORD = torrent_password

@@ -225,7 +225,7 @@ Returns a byte-string retrieved from the url provider.
 
 def _remove_file_failed(file):
     try:
-        os.remove(file)
+        ek.ek(os.remove,file)
     except:
         pass
 
@@ -700,8 +700,8 @@ def parse_json(data):
 
     try:
         parsedJSON = json.loads(data)
-    except ValueError:
-        logger.log(u"Error trying to decode json data:" + data, logger.ERROR)
+    except ValueError, e:
+        logger.log(u"Error trying to decode json data. Error: " + ex(e), logger.DEBUG)
         return None
 
     return parsedJSON
@@ -723,7 +723,7 @@ def parse_xml(data, del_xmlns=False):
     try:
         parsedXML = etree.fromstring(data)
     except Exception, e:
-        logger.log(u"Error trying to parse xml data: " + data + " to Elementtree, Error: " + ex(e), logger.DEBUG)
+        logger.log(u"Error trying to parse xml data. Error: " + ex(e), logger.DEBUG)
         parsedXML = None
 
     return parsedXML
@@ -856,34 +856,32 @@ def check_url(url):
         return conn.getresponse().status in good_codes
     except StandardError:
         return None
-        
-
-"""
-Encryption
-==========
-By Pedro Jose Pereira Vieito <pvieito@gmail.com> (@pvieito)
-
-* If encryption_version==0 then return data without encryption
-* The keys should be unique for each device
-
-To add a new encryption_version:
-  1) Code your new encryption_version        
-  2) Update the last encryption_version available in webserve.py
-  3) Remember to maintain old encryption versions and key generators for retrocompatibility
-"""
-
-# Key Generators
-unique_key1 = hex(uuid.getnode()**2) # Used in encryption v1
 
 # Encryption Functions
 def encrypt(data, encryption_version=0, decrypt=False):
+    """
+    Password encryption
+
+    By Pedro Jose Pereira Vieito <pvieito@gmail.com> (@pvieito)
     
-    # Version 1: Simple XOR encryption (this is not very secure, but works)
+    * If encryption_version==0 then return data without encryption
+    * The keys should be unique for each device
+    
+    To add a new encryption_version:
+      1) Code your new encryption_version        
+      2) Update the last encryption_version available in webserve.py
+      3) Remember to maintain old encryption versions and key generators for retrocompatibility
+    """
+    
+    # Key Generators
+    unique_key0 = hex(uuid.getnode()**2) # Used in encryption v1 & v2
+        	
+    # Version 1: Simple XOR encryption (Not very secure, but works)
     if encryption_version == 1:
     	if decrypt:
-        	return ''.join(chr(ord(x) ^ ord(y)) for (x,y) in izip(base64.decodestring(data), cycle(unique_key1)))
+        	return ''.join(chr(ord(x) ^ ord(y)) for (x,y) in izip(base64.decodestring(data), cycle(unique_key0))).decode('utf-8')
         else:
-        	return base64.encodestring(''.join(chr(ord(x) ^ ord(y)) for (x,y) in izip(data, cycle(unique_key1)))).strip()
+            return base64.encodestring(''.join(chr(ord(x) ^ ord(y)) for (x,y) in izip(data.encode('utf-8'), cycle(unique_key0)))).strip()        	
     # Version 0: Plain text
     else:
         return data
