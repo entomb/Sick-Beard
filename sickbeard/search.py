@@ -25,7 +25,7 @@ import re
 
 import sickbeard
 
-from common import SNATCHED, SNATCHED_PROPER, Quality, SEASON_RESULT, MULTI_EP_RESULT
+from common import SNATCHED, SNATCHED_PROPER, DOWNLOADABLE, Quality, SEASON_RESULT, MULTI_EP_RESULT
 
 from sickbeard import logger, db, show_name_helpers, exceptions, helpers
 from sickbeard import sab
@@ -164,6 +164,26 @@ def snatchEpisode(result, endStatus=SNATCHED):
 
         if curEpObj.status not in Quality.DOWNLOADED:
             notifiers.notify_snatch(curEpObj._format_pattern('%SN - %Sx%0E - %EN - %QN'))
+
+    return True
+
+def downloadableEpisode(result, endStatus=DOWNLOADABLE):
+    """
+    Contains the internal logic necessary to actually mark downloadable a result that
+    has been found.
+
+    Returns a bool representing success.
+
+    result: SearchResult instance to be snatched.
+    endStatus: the episode status that should be used for the episode object once it's found on torrent provider.
+    """
+    # don't notify when we re-download an episode
+    for curEpObj in result.episodes:
+        with curEpObj.lock:
+            curEpObj.status = endStatus
+            curEpObj.saveToDB()
+
+    #notifiers.notify_snatch(curEpObj._format_pattern('%SN - %Sx%0E - %EN - %QN'))
 
     return True
 

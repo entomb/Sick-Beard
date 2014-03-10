@@ -122,11 +122,8 @@ class DownloadSearchQueueItem(generic_queue.QueueItem):
 
         # mark downloadable whatever we find
 	for result in results:
-            for curEpObj in result.episodes:
-                with curEpObj.lock:
-                    curEpObj.status = common.DOWNLOADABLE
-                    curEpObj.saveToDB()
-
+            search.downloadableEpisode(result)
+            
         self.finish()
 
     def _available_any_episodes(self, statusResults, bestQualities):
@@ -207,20 +204,15 @@ class RSSSearchQueueItem(generic_queue.QueueItem):
 
         for curResult in foundResults:
 
-            for curEpObj in curResult.episodes:
+            showObj = helpers.findCertainShow(sickbeard.showList, int(curResult["tvdbid"]))
+            if not showObj:
+                continue
 
-                showObj = helpers.findCertainShow(sickbeard.showList, int(curEpObj.show.tvdbid))
-                if not showObj:
-                    continue
-
-                if showObj.wantEpisode(curEpObj.season, curEpObj.episode, curResult.quality) and not curEpObj.show.paused:
-                    search.snatchEpisode(curResult)
-                    time.sleep(2)
-                elif showObj.lookIfDownloadable(curEpObj.season, curEpObj.episode, curResult.quality):
-                    # mark downloadable whatever we find
-                    with curEpObj.lock:
-                        curEpObj.status = common.DOWNLOADABLE
-                        curEpObj.saveToDB()
+            if not showObj.paused:
+                search.snatchEpisode(curResult)
+                time.sleep(2)
+            else:
+                search.downloadableEpisode(curResult)
 
         generic_queue.QueueItem.finish(self)
 
