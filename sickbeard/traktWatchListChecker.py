@@ -116,8 +116,8 @@ class TraktChecker():
 		logger.log(u"Start looking if some WANTED episode need to be added to watchlist", logger.DEBUG)
 
 		myDB = db.DBConnection()
-		sql_selection="select showid, show_name, season, episode from tv_episodes,tv_shows where tv_shows.tvdb_id = tv_episodes.showid and tv_episodes.status in (?,?,?)"
-		episode = myDB.select(sql_selection, [WANTED, Quality.SNATCHED, Quality.SNATCHED_PROPER])
+		sql_selection='select showid, show_name, season, episode from tv_episodes,tv_shows where tv_shows.tvdb_id = tv_episodes.showid and tv_episodes.status in ('+','.join([str(x) for x in Quality.SNATCHED + Quality.SNATCHED_PROPER])+')'
+                episode = myDB.select(sql_selection)
 
 		if episode is not None:
 			for cur_episode in episode:
