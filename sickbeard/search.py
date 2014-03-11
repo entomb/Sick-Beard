@@ -183,7 +183,7 @@ def downloadableEpisode(result, endStatus=DOWNLOADABLE):
             curEpObj.status = endStatus
             curEpObj.saveToDB()
 
-    #notifiers.notify_snatch(curEpObj._format_pattern('%SN - %Sx%0E - %EN - %QN'))
+    notifiers.notify_downloadable(curEpObj._format_pattern('%SN - %Sx%0E - %EN'))
 
     return True
 

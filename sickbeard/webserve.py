@@ -1602,7 +1602,7 @@ class ConfigNotifications:
                           pytivo_host=None, pytivo_share_name=None, pytivo_tivo_name=None,
                           use_nma=None, nma_notify_onsnatch=None, nma_notify_ondownload=None, nma_notify_onsubtitledownload=None, nma_api=None, nma_priority=0,
                           use_pushalot=None, pushalot_notify_onsnatch=None, pushalot_notify_ondownload=None, pushalot_notify_onsubtitledownload=None, pushalot_authorizationtoken=None,
-                          use_pushbullet=None, pushbullet_notify_onsnatch=None, pushbullet_notify_ondownload=None, pushbullet_notify_onsubtitledownload=None, pushbullet_api=None, pushbullet_device=None, pushbullet_device_list=None,          
+                          use_pushbullet=None, pushbullet_notify_onsnatch=None, pushbullet_notify_ondownload=None, pushbullet_notify_ondownloadable=None, pushbullet_notify_onsubtitledownload=None, pushbullet_api=None, pushbullet_device=None, pushbullet_device_list=None,          
                           use_email=None, email_notify_onsnatch=None, email_notify_ondownload=None, email_notify_onsubtitledownload=None, email_host=None, email_port=25, email_from=None,
                           email_tls=None, email_user=None, email_password=None, email_list=None, email_show_list=None, email_show=None ):
 
@@ -1735,6 +1735,7 @@ class ConfigNotifications:
         sickbeard.USE_PUSHBULLET = config.checkbox_to_value(use_pushbullet)
         sickbeard.PUSHBULLET_NOTIFY_ONSNATCH = config.checkbox_to_value(pushbullet_notify_onsnatch)
         sickbeard.PUSHBULLET_NOTIFY_ONDOWNLOAD = config.checkbox_to_value(pushbullet_notify_ondownload)
+        sickbeard.PUSHBULLET_NOTIFY_ONDOWNLOADABLE = config.checkbox_to_value(pushbullet_notify_ondownloadable)
         sickbeard.PUSHBULLET_NOTIFY_ONSUBTITLEDOWNLOAD = config.checkbox_to_value(pushbullet_notify_onsubtitledownload)
         sickbeard.PUSHBULLET_API = pushbullet_api
         sickbeard.PUSHBULLET_DEVICE = pushbullet_device_list

@@ -954,6 +954,13 @@
                                 </label>
                             </div>
                             <div class="field-pair">
+                                <input type="checkbox" name="pushbullet_notify_ondownloadable" id="pushbullet_notify_ondownloadable" #if $sickbeard.PUSHBULLET_NOTIFY_ONDOWNLOADABLE then "checked=\"checked\"" else ""# />
+                                <label class="clearfix" for="pushbullet_notify_ondownloadable">
+                                    <span class="component-title">Notify on Episode Availability</span>
+                                    <span class="component-desc">Send notification when we find torrent to Download?</span>
+                                </label>
+                            </div>
+                            <div class="field-pair">
                                 <input type="checkbox" name="pushbullet_notify_onsubtitledownload" id="pushbullet_notify_onsubtitledownload" #if $sickbeard.PUSHBULLET_NOTIFY_ONSUBTITLEDOWNLOAD then "checked=\"checked\"" else ""# />
                                 <label class="clearfix" for="pushbullet_notify_onsubtitledownload">
                                     <span class="component-title">Notify on Subtitle Download</span>

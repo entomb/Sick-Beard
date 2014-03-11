@@ -41,10 +41,12 @@ SEASON_RESULT = -2
 NOTIFY_SNATCH = 1
 NOTIFY_DOWNLOAD = 2
 NOTIFY_SUBTITLE_DOWNLOAD = 3
+NOTIFY_DOWNLOADABLE = 4
 
 notifyStrings = {}
 notifyStrings[NOTIFY_SNATCH] = "Started Download"
 notifyStrings[NOTIFY_DOWNLOAD] = "Download Finished"
+notifyStrings[NOTIFY_DOWNLOADABLE] = "Download Available"
 notifyStrings[NOTIFY_SUBTITLE_DOWNLOAD] = "Subtitle Download Finished"
 
 ### Episode statuses
