@@ -27,6 +27,7 @@ from sickbeard import logger
 from sickbeard import helpers
 from sickbeard import search_queue
 from sickbeard.common import SNATCHED, SNATCHED_PROPER, DOWNLOADED, DOWNLOADABLE, SKIPPED, UNAIRED, IGNORED, ARCHIVED, WANTED, UNKNOWN
+from common import Quality, qualityPresetStrings, statusStrings
 from lib.trakt import *
 
 class TraktChecker():
@@ -89,7 +90,7 @@ class TraktChecker():
 					logger.log(u"Episode: tvdb_id " + show["tvdb_id"] + ", Title " + show["title"] + ", Season " + str(episode["season"]) + ", Episode" + str(episode["number"]) + " not in Sickberad ShowList", logger.DEBUG)
 					continue
 					
-				if ep_obj.status != WANTED and ep_obj.status != UNKNOWN and ep_obj.status != SNATCHED and ep_obj.status != SNATCHED_PROPER:
+				if ep_obj.status != WANTED and ep_obj.status != UNKNOWN and ep_obj.status not in Quality.SNATCHED and ep_obj.status not in Quality.SNATCHED_PROPER:
 					if self.episode_in_watchlist(show["tvdb_id"], episode["season"], episode["number"]):
 					        logger.log(u"Removing episode: tvdb_id " + show["tvdb_id"] + ", Title " + show["title"] + ", Season " + str(episode["season"]) + ", Episode " + str(episode["number"]) + ", Status " + str(ep_obj.status) + " from Watchlist", logger.DEBUG)
 						self.update_watchlist("episode", "remove", show["tvdb_id"], episode["season"], episode["number"]) 
@@ -116,7 +117,7 @@ class TraktChecker():
 
 		myDB = db.DBConnection()
 		sql_selection="select showid, show_name, season, episode from tv_episodes,tv_shows where tv_shows.tvdb_id = tv_episodes.showid and tv_episodes.status in (?,?,?)"
-		episode = myDB.select(sql_selection, [WANTED, SNATCHED, SNATCHED_PROPER])
+		episode = myDB.select(sql_selection, [WANTED, Quality.SNATCHED, Quality.SNATCHED_PROPER])
 
 		if episode is not None:
 			for cur_episode in episode:
