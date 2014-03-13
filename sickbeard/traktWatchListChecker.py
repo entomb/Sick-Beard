@@ -36,6 +36,8 @@ class TraktChecker():
         self.todoBacklog = []
 	self.ShowWatchlist = []
 	self.EpisodeWatchlist = []
+        self.ShowProgress = []
+        self.EpisodeWatched = []
 
     def run(self):
         if sickbeard.USE_TRAKT:
@@ -44,26 +46,10 @@ class TraktChecker():
                 logger.log(u"No default root directory", logger.ERROR)
                 return
 
-	    self.ShowWatchlist = TraktCall("user/watchlist/shows.json/%API%/" + sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_API, sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_PASSWORD)
-	    if self.ShowWatchlist is None:
-	        logger.log(u"Could not connect to trakt service, cannot download Show Watchlist", logger.ERROR)
-	        return
-
-	    self.EpisodeWatchlist = TraktCall("user/watchlist/episodes.json/%API%/" + sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_API, sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_PASSWORD)
-	    if self.EpisodeWatchlist is None:
-	        logger.log(u"Could not connect to trakt service, cannot download Episode Watchlist", logger.ERROR)
-	        return
-
-	    self.ShowProgress = TraktCall("user/progress/watched.json/%API%/" + sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_API, sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_PASSWORD)
-	    if self.ShowProgress is None:
-           	logger.log(u"Could not connect to trakt service, cannot download show progress", logger.ERROR)
-                return
-
-	    self.EpisodeWatched = TraktCall("user/library/shows/watched.json/%API%/" + sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_API, sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_PASSWORD)
-            if self.EpisodeWatched is None:
-            	logger.log(u"Could not connect to trakt service, cannot download show from library", logger.ERROR)
-            	return
-
+	    self._getShowWatchlist()
+	    self._getEpisodeWatchlist()
+	    self._getShowProgress()
+	    self._getEpisodeWatched()
 
             self.removeShowFromWatchList()
             self.updateShows()
@@ -74,10 +60,51 @@ class TraktChecker():
             self.addShowToWatchList()
 
 
+    def _getEpisodeWatchlist(self):
+        
+        self.EpisodeWatchlist = TraktCall("user/watchlist/episodes.json/%API%/" + sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_API, sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_PASSWORD)
+        if self.EpisodeWatchlist is None:
+            logger.log(u"Could not connect to trakt service, cannot download Episode Watchlist", logger.ERROR)
+            return False
+
+        return True
+
+    def _getShowWatchlist(self):
+
+        self.ShowWatchlist = TraktCall("user/watchlist/shows.json/%API%/" + sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_API, sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_PASSWORD)
+        if self.ShowWatchlist is None:
+            logger.log(u"Could not connect to trakt service, cannot download Show Watchlist", logger.ERROR)
+            return False
+
+        return True
+
+    def _getShowProgress(self):
+
+        self.ShowProgress = TraktCall("user/progress/watched.json/%API%/" + sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_API, sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_PASSWORD)
+        if self.ShowProgress is None:
+            logger.log(u"Could not connect to trakt service, cannot download show progress", logger.ERROR)
+            return Fasle
+
+        return True
+
+    def _getEpisodeWatched(self):
+
+        self.EpisodeWatched = TraktCall("user/library/shows/watched.json/%API%/" + sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_API, sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_PASSWORD)
+        if self.EpisodeWatched is None:
+            logger.log(u"Could not connect to trakt service, cannot download show from library", logger.ERROR)
+            return False
+
+        return True
+
+    def refreshWatchlist(self):
+
+       self._getEpisodeWatchlist()
+
     def removeEpisodeFromWatchList(self):
 
-	if sickbeard.TRAKT_REMOVE_WATCHLIST:
+	if sickbeard.TRAKT_REMOVE_WATCHLIST and sickbeard.USE_TRAKT:
 		logger.log(u"Start looking if some episode has to be removed from watchlist", logger.DEBUG)
+
 		for show in self.EpisodeWatchlist:
 			for episode in show["episodes"]:
 				newShow = helpers.findCertainShow(sickbeard.showList, int(show["tvdb_id"]))
@@ -100,7 +127,7 @@ class TraktChecker():
 
     def removeShowFromWatchList(self):
 
-	if sickbeard.TRAKT_REMOVE_SHOW_WATCHLIST:
+	if sickbeard.TRAKT_REMOVE_SHOW_WATCHLIST and sickbeard.USE_TRAKT:
 		logger.log(u"Start looking if some show has to be removed from watchlist", logger.DEBUG)
 		for show in self.ShowWatchlist:
 			newShow = helpers.findCertainShow(sickbeard.showList, int(show["tvdb_id"]))
@@ -110,14 +137,18 @@ class TraktChecker():
 					self.update_watchlist("show", "remove", show["tvdb_id"], 0, 0) 
 		logger.log(u"Stop looking if some show has to be removed from watchlist", logger.DEBUG)
 				
-    def addEpisodeToWatchList(self):
+    def addEpisodeToWatchList(self, tvdb_id=None):
 
-	if sickbeard.TRAKT_REMOVE_WATCHLIST:
+	if sickbeard.TRAKT_REMOVE_WATCHLIST and sickbeard.USE_TRAKT:
 		logger.log(u"Start looking if some WANTED episode need to be added to watchlist", logger.DEBUG)
 
 		myDB = db.DBConnection()
-		sql_selection='select showid, show_name, season, episode from tv_episodes,tv_shows where tv_shows.tvdb_id = tv_episodes.showid and tv_episodes.status in ('+','.join([str(x) for x in Quality.SNATCHED + Quality.SNATCHED_PROPER])+')'
-                episode = myDB.select(sql_selection)
+		sql_selection='select showid, show_name, season, episode from tv_episodes,tv_shows where tv_shows.tvdb_id = tv_episodes.showid and tv_episodes.status in ('+','.join([str(x) for x in Quality.SNATCHED + Quality.SNATCHED_PROPER + [WANTED]])+')'
+		if tvdb_id is None:
+                    episode = myDB.select(sql_selection)
+                else:
+                    sql_selection=sql_selection+" and showid=?"
+                    episode = myDB.select(sql_selection, [tvdb_id])
 
 		if episode is not None:
 			for cur_episode in episode:
@@ -129,7 +160,7 @@ class TraktChecker():
 			
     def addShowToWatchList(self):
 
-	if sickbeard.TRAKT_REMOVE_SHOW_WATCHLIST:
+	if sickbeard.TRAKT_REMOVE_SHOW_WATCHLIST and sickbeard.USE_TRAKT:
 		logger.log(u"Start looking if some show need to be added to watchliast", logger.DEBUG)
 
 		if sickbeard.showList is not None:
