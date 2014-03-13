@@ -204,7 +204,7 @@ class RSSSearchQueueItem(generic_queue.QueueItem):
 
         for curResult in foundResults:
 
-            showObj = helpers.findCertainShow(sickbeard.showList, int(curResult["tvdbid"]))
+            showObj = helpers.findCertainShow(sickbeard.showList, int(curResult.episodes[0].tvdbid))
             if not showObj:
                 continue
 
