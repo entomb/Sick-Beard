@@ -213,6 +213,7 @@ class RSSSearchQueueItem(generic_queue.QueueItem):
                 time.sleep(2)
             else:
                 search.downloadableEpisode(curResult)
+                time.sleep(1)
 
         generic_queue.QueueItem.finish(self)
 
