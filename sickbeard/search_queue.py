@@ -204,11 +204,9 @@ class RSSSearchQueueItem(generic_queue.QueueItem):
 
         for curResult in foundResults:
 
-            showObj = helpers.findCertainShow(sickbeard.showList, int(curResult.episodes[0].tvdbid))
-            if not showObj:
-                continue
+            logger.log(u"Analizing Show: " + curResult.episodes[0].show.name + ", tvdb_id: " + str(curResult.episodes[0].show.tvdbid), logger.DEBUG)
 
-            if not showObj.paused:
+            if not curResult.episodes[0].show.paused:
                 search.snatchEpisode(curResult)
                 time.sleep(2)
             else:
