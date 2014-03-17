@@ -1050,41 +1050,43 @@ class TVShow(object):
 
     def lookIfDownloadable(self, season, episode, quality, manualSearch=False):
 
-        logger.log(u"Checking if we want episode " + str(season) + "x" + str(episode) + " at quality " + Quality.qualityStrings[quality], logger.DEBUG)
+        logger.log(u"Checking if is available episode " + str(season) + "x" + str(episode) + " at quality " + Quality.qualityStrings[quality], logger.DEBUG)
 
         # if the quality isn't one we want under any circumstances then just say no
         anyQualities, bestQualities = Quality.splitQuality(self.quality)
         logger.log(u"any,best = " + str(anyQualities) + " " + str(bestQualities) + " and we are " + str(quality), logger.DEBUG)
 
         if quality not in anyQualities + bestQualities:
-            logger.log(u"I know for sure I don't want this episode, saying no", logger.DEBUG)
+            logger.log(u"it's not available at this quality, ignoring found episode", logger.DEBUG)
             return False
 
         myDB = db.DBConnection()
         sqlResults = myDB.select("SELECT status FROM tv_episodes WHERE showid = ? AND season = ? AND episode = ?", [self.tvdbid, season, episode])
 
         if not sqlResults or not len(sqlResults):
-            logger.log(u"Unable to find the episode", logger.DEBUG)
+            logger.log(u"Unable to find a matching episode in database, ignoring found episode", logger.DEBUG)
             return False
 
         epStatus = int(sqlResults[0]["status"])
+        epStatus_text = statusStrings[epStatus]
 
         logger.log(u"current episode status: " + str(epStatus), logger.DEBUG)
 
         # if we know we don't want it then just say no
         if epStatus in (IGNORED, ARCHIVED) and not manualSearch:
-            logger.log(u"Ep is ignored/archived, not bothering", logger.DEBUG)
+            logger.log(u"Existing episode status: " + str(epStatus) + " (" + epStatus_text + ")", logger.DEBUG)
             return False
 
         # if it's one of these then we want it as long as it's in our allowed initial qualities
         if quality in anyQualities + bestQualities:
             if epStatus in (WANTED, UNAIRED, SKIPPED):
-                logger.log(u"Ep is wanted/unaired/skipped, definitely mark it downloadable", logger.DEBUG)
+                logger.log(u"Existing episode status is wanted/unaired/skipped, definitely mark it downloadable", logger.DEBUG)
                 return True
             elif manualSearch:
-                logger.log(u"Usually I would ignore this ep but because you forced the search I'm overriding the default and allowing the quality", logger.DEBUG)
+                logger.log(u"Usually ignoring found episode, but forced search allows the quality, getting found episode", logger.DEBUG)
                 return True
 
+        logger.log(u"None of the conditions were met, ignoring found episode", logger.DEBUG)
         return False
 
     def getOverview(self, epStatus):
