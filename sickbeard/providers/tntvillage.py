@@ -495,7 +495,7 @@ class TNTVillageCache(tvcache.TVCache):
         tvcache.TVCache.__init__(self, provider)
 
         # only poll TNTVillage every 30 minutes max
-        self.minTime = 5
+        self.minTime = 30
 
     def updateCache(self):
 
