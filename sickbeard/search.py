@@ -179,11 +179,12 @@ def downloadableEpisode(result, endStatus=DOWNLOADABLE):
     """
     # don't notify when we re-download an episode
     for curEpObj in result.episodes:
-        with curEpObj.lock:
-            curEpObj.status = endStatus
-            curEpObj.saveToDB()
+        if curEpObj.status != endStatus:
+            with curEpObj.lock:
+                curEpObj.status = endStatus
+                curEpObj.saveToDB()
 
-    notifiers.notify_downloadable(curEpObj._format_pattern('%SN - %Sx%0E - %EN'))
+            notifiers.notify_downloadable(curEpObj._format_pattern('%SN - %Sx%0E - %EN'))
 
     return True
 
