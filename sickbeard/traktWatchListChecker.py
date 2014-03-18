@@ -135,6 +135,9 @@ class TraktChecker():
 				if self.show_full_wathced(newShow):
 					logger.log(u"Removing show: tvdb_id " + show["tvdb_id"] + ", Title " + show["title"] + " from Watchlist", logger.DEBUG)
 					self.update_watchlist("show", "remove", show["tvdb_id"], 0, 0) 
+					logger.log(u"Deleting show: tvdb_id " + show["tvdb_id"] + ", Title " + show["title"] + " from SickBeard", logger.DEBUG)
+                                        newShow.deleteShow()
+
 		logger.log(u"Stop looking if some show has to be removed from watchlist", logger.DEBUG)
 				
     def addEpisodeToWatchList(self, tvdb_id=None):
