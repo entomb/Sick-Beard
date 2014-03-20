@@ -1372,6 +1372,7 @@ class ConfigProviders:
                       torrentday_username=None, torrentday_password=None, torrentday_freeleech=None,
                       hdbits_username=None, hdbits_passkey=None,
 					  nextgen_username=None, nextgen_password=None,
+                      speedcd_username=None, speedcd_password=None, speedcd_freeleech=None,
                       newzbin_username=None, newzbin_password=None,
                       provider_order=None):
 
@@ -1450,7 +1451,6 @@ class ConfigProviders:
                 finishedNames.append(curID)
 
         # delete anything that is missing
-        #logger.log(u"sickbeard.anyRssProviderList =  " + repr(sickbeard.anyRssProviderList))
         for curProvider in sickbeard.torrentRssProviderList:
             if curProvider.getID() not in finishedNames:
                 sickbeard.torrentRssProviderList.remove(curProvider)
@@ -1503,7 +1503,9 @@ class ConfigProviders:
             elif curProvider == 'hdbits':
                 sickbeard.HDBITS = curEnabled
             elif curProvider == 'nextgen':
-                sickbeard.NEXTGEN = curEnabled				
+                sickbeard.NEXTGEN = curEnabled
+            elif curProvider == 'speedcd':
+                sickbeard.SPEEDCD = curEnabled
             elif curProvider in newznabProviderDict:
                 newznabProviderDict[curProvider].enabled = bool(curEnabled)
             elif curProvider in torrentRssProviderDict:
@@ -1560,7 +1562,11 @@ class ConfigProviders:
 
         sickbeard.NEXTGEN_USERNAME = nextgen_username.strip()
         sickbeard.NEXTGEN_PASSWORD = nextgen_password.strip()
-		
+
+        sickbeard.SPEEDCD_USERNAME = speedcd_username.strip()
+        sickbeard.SPEEDCD_PASSWORD = speedcd_password.strip()
+        sickbeard.SPEEDCD_FREELEECH = config.checkbox_to_value(speedcd_freeleech)
+
         sickbeard.NEWZNAB_DATA = '!!!'.join([x.configStr() for x in sickbeard.newznabProviderList])
         sickbeard.PROVIDER_ORDER = provider_list
 

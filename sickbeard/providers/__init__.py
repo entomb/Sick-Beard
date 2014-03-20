@@ -31,7 +31,8 @@ __all__ = ['ezrss',
            'hdbits',
            'iptorrents',
            'omgwtfnzbs',
-		   'nextgen'
+		   'nextgen',
+           'speedcd'
            ]
 
 import sickbeard
