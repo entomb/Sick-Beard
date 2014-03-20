@@ -83,7 +83,7 @@ class TraktChecker():
         self.ShowProgress = TraktCall("user/progress/watched.json/%API%/" + sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_API, sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_PASSWORD)
         if self.ShowProgress is None:
             logger.log(u"Could not connect to trakt service, cannot download show progress", logger.ERROR)
-            return Fasle
+            return False
 
         return True
 
