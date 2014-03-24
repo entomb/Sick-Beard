@@ -46,10 +46,14 @@ class TraktChecker():
                 logger.log(u"No default root directory", logger.ERROR)
                 return
 
-	    self._getShowWatchlist()
-	    self._getEpisodeWatchlist()
-	    self._getShowProgress()
-	    self._getEpisodeWatched()
+	    if not self._getShowWatchlist():
+                return
+	    if not self._getEpisodeWatchlist():
+                return
+	    if not self._getShowProgress():
+                return
+	    if not self._getEpisodeWatched():
+                return
 
             self.removeShowFromWatchList()
             self.updateShows()
@@ -98,7 +102,8 @@ class TraktChecker():
 
     def refreshWatchlist(self):
 
-       self._getEpisodeWatchlist()
+       if not self._getEpisodeWatchlist():
+           return False
 
     def removeEpisodeFromWatchList(self):
 
@@ -120,7 +125,8 @@ class TraktChecker():
 				if ep_obj.status != WANTED and ep_obj.status != UNKNOWN and ep_obj.status not in Quality.SNATCHED and ep_obj.status not in Quality.SNATCHED_PROPER:
 					if self.episode_in_watchlist(show["tvdb_id"], episode["season"], episode["number"]):
 					        logger.log(u"Removing episode: tvdb_id " + show["tvdb_id"] + ", Title " + show["title"] + ", Season " + str(episode["season"]) + ", Episode " + str(episode["number"]) + ", Status " + str(ep_obj.status) + " from Watchlist", logger.DEBUG)
-						self.update_watchlist("episode", "remove", show["tvdb_id"], episode["season"], episode["number"]) 
+						if not self.update_watchlist("episode", "remove", show["tvdb_id"], episode["season"], episode["number"]):
+                                                    return False
 
 		logger.log(u"Stop looking if some episode has to be removed from watchlist", logger.DEBUG)
 
@@ -136,7 +142,8 @@ class TraktChecker():
 					logger.log(u"Deleting show: tvdb_id " + show["tvdb_id"] + ", Title " + show["title"] + " from SickBeard", logger.DEBUG)
                                         newShow.deleteShow()
 					logger.log(u"Removing show: tvdb_id " + show["tvdb_id"] + ", Title " + show["title"] + " from Watchlist", logger.DEBUG)
-					self.update_watchlist("show", "remove", show["tvdb_id"], 0, 0) 
+					if not self.update_watchlist("show", "remove", show["tvdb_id"], 0, 0):
+                                            return False
 
 		logger.log(u"Stop looking if some show has to be removed from watchlist", logger.DEBUG)
 				
@@ -157,7 +164,8 @@ class TraktChecker():
 			for cur_episode in episode:
 				if not self.episode_in_watchlist(cur_episode["showid"], cur_episode["season"], cur_episode["episode"]):
 					logger.log(u"Episode: tvdb_id " + str(cur_episode["showid"])+ ", Title " +  str(cur_episode["show_name"]) + " " + str(cur_episode["season"]) + "x" + str(cur_episode["episode"]) + " should be added to watchlist", logger.DEBUG)
-					self.update_watchlist("episode", "add", cur_episode["showid"], cur_episode["season"], cur_episode["episode"]) 
+					if not self.update_watchlist("episode", "add", cur_episode["showid"], cur_episode["season"], cur_episode["episode"]):
+                                            return False
 
 		logger.log(u"Stop looking if some WANTED episode need to be added to watchlist", logger.DEBUG)
 			
@@ -170,7 +178,8 @@ class TraktChecker():
 			for show in sickbeard.showList:
 				if not self.show_in_watchlist(show.tvdbid):
 					logger.log(u"Show: tvdb_id " + str(show.tvdbid) + ", Title " +  str(show.name) + " should be added to watchlist", logger.DEBUG)
-					self.update_watchlist("show", "add", show.tvdbid, 0, 0) 
+					if not self.update_watchlist("show", "add", show.tvdbid, 0, 0):
+                                            return False
 				
 		logger.log(u"Stop looking if some show need to be added to watchliast", logger.DEBUG)
 
@@ -245,7 +254,8 @@ class TraktChecker():
 					if newShow is not None:
        	        				self.setEpisodeToWanted(newShow, s, e)
 						if not self.episode_in_watchlist(newShow.tvdbid, s, e):
-							self.update_watchlist("episode", "add", newShow.tvdbid, s, e) 
+							if not self.update_watchlist("episode", "add", newShow.tvdbid, s, e):
+                                                            return False
 						wanted = True
 					else:
                     				self.todoWanted.append((int(show["tvdb_id"]), s, e))
@@ -253,7 +263,8 @@ class TraktChecker():
 					logger.log(u"Changed episode to archived: S" + str(s) + "E"+  str(e), logger.DEBUG)
        	        			self.setEpisodeToArchived(newShow, s, e)
 					if self.episode_in_watchlist(newShow.tvdbid, s, e):
-						self.update_watchlist("episode", "remove", newShow.tvdbid, s, e) 
+						if not self.update_watchlist("episode", "remove", newShow.tvdbid, s, e):
+                                                    return False
 
 			if (s*100+e) == (int(last_s[0]['season'])*100+int(last_s[0]['episodes'])):
 				s = s + 1
@@ -278,7 +289,8 @@ class TraktChecker():
 		if newShow is not None:
 		    self.setEpisodeToWanted(newShow, 1, 1)
 		    if not self.episode_in_watchlist(newShow.tvdbid, 1, 1):
-		        self.update_watchlist("episode", "add", newShow.tvdbid, 1, 1) 
+		        if not self.update_watchlist("episode", "add", newShow.tvdbid, 1, 1):
+                            return False
 		    self.startBacklog(newShow)
 		else:
 		    self.todoWanted.append((int(show["tvdb_id"]), 1, 1))
@@ -299,7 +311,8 @@ class TraktChecker():
 		    if epObj.status != WANTED:
                     	self.setEpisodeToWanted(newShow, episode["season"], episode["number"])
 		    	if not self.episode_in_watchlist(newShow.tvdbid, episode["season"], episode["number"]):
-		        	self.update_watchlist("episode", "add", newShow.tvdbid, episode["season"], episode["number"]) 
+		        	if not self.update_watchlist("episode", "add", newShow.tvdbid, episode["season"], episode["number"]):
+                                    return False
                 else:
                     self.todoWanted.append((int(show["tvdb_id"]), episode["season"], episode["number"]))
             self.startBacklog(newShow)
@@ -326,7 +339,8 @@ class TraktChecker():
         sickbeard.showQueueScheduler.action.addShow(int(tvdbid), showPath, status, int(sickbeard.QUALITY_DEFAULT), int(sickbeard.FLATTEN_FOLDERS_DEFAULT))
 	if not self.show_in_watchlist(tvdbid):
 	    logger.log(u"Show: tvdb_id " + str(tvdbid) + ", Title " +  str(name) + " should be added to watchlist", logger.DEBUG)
-	    self.update_watchlist("show", "add", tvdbid, 0, 0) 
+	    if not self.update_watchlist("show", "add", tvdbid, 0, 0):
+                return False
 
     def setEpisodeToArchived(self, show, s, e):
         """
@@ -376,7 +390,8 @@ class TraktChecker():
                 continue
             self.setEpisodeToWanted(show, episode[1], episode[2])
 	    if not self.episode_in_watchlist(show.tvdbid, episode[1], episode[2]):
-	        self.update_watchlist("episode", "add", show.tvdbid,  episode[1], episode[2]) 
+	        if not self.update_watchlist("episode", "add", show.tvdbid,  episode[1], episode[2]):
+                    return False
             self.todoWanted.remove(episode)
         self.startBacklog(show)
 
@@ -416,7 +431,8 @@ class TraktChecker():
         	result=TraktCall("show/episode/watchlist/%API%", sickbeard.TRAKT_API, sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_PASSWORD, data)
             elif update=="remove" and sickbeard.TRAKT_REMOVE_WATCHLIST:
 	     	result=TraktCall("show/episode/unwatchlist/%API%", sickbeard.TRAKT_API, sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_PASSWORD, data)
-            self._getEpisodeWatchlist()
+            if not self._getEpisodeWatchlist():
+                return False
 	elif type=="show":
 	    # traktv URL parameters
 	    data = {
@@ -428,7 +444,8 @@ class TraktChecker():
         	result=TraktCall("show/watchlist/%API%", sickbeard.TRAKT_API, sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_PASSWORD, data)
             elif update=="remove" and sickbeard.TRAKT_REMOVE_SHOW_WATCHLIST:
 	   	result=TraktCall("show/unwatchlist/%API%", sickbeard.TRAKT_API, sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_PASSWORD, data)
-            self._getShowWatchlist()
+            if not self._getShowWatchlist():
+                return False
 	else:
             logger.log(u"Error invoking update_watchlist procedure, check parameter", logger.ERROR)
 	    return False

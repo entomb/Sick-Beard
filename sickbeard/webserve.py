@@ -3112,15 +3112,15 @@ class Home:
                 sickbeard.searchQueueScheduler.action.add_item(cur_backlog_queue_item) # @UndefinedVariable
             msg += "</ul>"
             #add episode to watchlist
-            sickbeard.traktWatchListCheckerSchedular.action.refreshWatchlist()
-            sickbeard.traktWatchListCheckerSchedular.action.addEpisodeToWatchList(showObj.tvdbid)
+            if sickbeard.traktWatchListCheckerSchedular.action.refreshWatchlist():
+                sickbeard.traktWatchListCheckerSchedular.action.addEpisodeToWatchList(showObj.tvdbid)
 
             if segment_list:
                 ui.notifications.message("Backlog started", msg)
 
         if int(status) == SKIPPED:           
-            sickbeard.traktWatchListCheckerSchedular.action.refreshWatchlist()
-	    sickbeard.traktWatchListCheckerSchedular.action.removeEpisodeFromWatchList()
+            if sickbeard.traktWatchListCheckerSchedular.action.refreshWatchlist():
+	        sickbeard.traktWatchListCheckerSchedular.action.removeEpisodeFromWatchList()
 
         if int(status) == FAILED:
             msg = "Retring Search was automatically started for the following season of <b>" + showObj.name + "</b>:<br />"
