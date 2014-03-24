@@ -392,7 +392,7 @@ class TraktChecker():
 	found = False
 
 	for pshow in self.ShowProgress:
-	    if pshow["show"]["tvdb_id"] == str(show.tvdbid) and int(pshow["progress"]["percentage"]) == 100:
+	   if int(pshow["show"]["tvdb_id"]) == int(show.tvdbid) and int(pshow["progress"]["percentage"]) == 100:
 		found=True
 		break
 
