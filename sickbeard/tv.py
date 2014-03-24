@@ -877,7 +877,7 @@ class TVShow(object):
             logger.log(u"Deleting cache file " + cache_file)
             os.remove(cache_file)
             if sickbeard.TRAKT_REMOVE_SHOW_WATCHLIST and sickbeard.USE_TRAKT:
-                logger.log(u"Removing show: tvdb_id " + self.tvdbid + ", Title " + self.name + " from Watchlist", logger.DEBUG)
+                logger.log(u"Removing show: tvdb_id " + str(self.tvdbid) + ", Title " + str(self.name) + " from Watchlist", logger.DEBUG)
                 if sickbeard.traktWatchListCheckerSchedular.action.update_watchlist("show", "remove", self.tvdbid, 0, 0):
                     sickbeard.traktWatchListCheckerSchedular.action.refreshShowWatchlist()
                 else:
