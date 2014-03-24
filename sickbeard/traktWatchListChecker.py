@@ -133,10 +133,10 @@ class TraktChecker():
 			newShow = helpers.findCertainShow(sickbeard.showList, int(show["tvdb_id"]))
 			if (newShow is not None) and (newShow.status == "Ended"):
 				if self.show_full_wathced(newShow):
-					logger.log(u"Removing show: tvdb_id " + show["tvdb_id"] + ", Title " + show["title"] + " from Watchlist", logger.DEBUG)
-					self.update_watchlist("show", "remove", show["tvdb_id"], 0, 0) 
 					logger.log(u"Deleting show: tvdb_id " + show["tvdb_id"] + ", Title " + show["title"] + " from SickBeard", logger.DEBUG)
                                         newShow.deleteShow()
+					logger.log(u"Removing show: tvdb_id " + show["tvdb_id"] + ", Title " + show["title"] + " from Watchlist", logger.DEBUG)
+					self.update_watchlist("show", "remove", show["tvdb_id"], 0, 0) 
 
 		logger.log(u"Stop looking if some show has to be removed from watchlist", logger.DEBUG)
 				
@@ -324,6 +324,9 @@ class TraktChecker():
         else:
             helpers.chmodAsParent(showPath)
         sickbeard.showQueueScheduler.action.addShow(int(tvdbid), showPath, status, int(sickbeard.QUALITY_DEFAULT), int(sickbeard.FLATTEN_FOLDERS_DEFAULT))
+	if not self.show_in_watchlist(tvdbid):
+	    logger.log(u"Show: tvdb_id " + str(tvdbid) + ", Title " +  str(name) + " should be added to watchlist", logger.DEBUG)
+	    self.update_watchlist("show", "add", tvdbid, 0, 0) 
 
     def setEpisodeToArchived(self, show, s, e):
         """
@@ -392,7 +395,7 @@ class TraktChecker():
 	found = False
 
 	for pshow in self.ShowProgress:
-	    if pshow["show"]["tvdb_id"] == str(show.tvdbid) and int(pshow["progress"]["percentage"]) == 100:
+	   if int(pshow["show"]["tvdb_id"]) == int(show.tvdbid) and int(pshow["progress"]["percentage"]) == 100:
 		found=True
 		break
 
@@ -413,6 +416,7 @@ class TraktChecker():
         	result=TraktCall("show/episode/watchlist/%API%", sickbeard.TRAKT_API, sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_PASSWORD, data)
             elif update=="remove" and sickbeard.TRAKT_REMOVE_WATCHLIST:
 	     	result=TraktCall("show/episode/unwatchlist/%API%", sickbeard.TRAKT_API, sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_PASSWORD, data)
+            self._getEpisodeWatchlist()
 	elif type=="show":
 	    # traktv URL parameters
 	    data = {
@@ -424,6 +428,7 @@ class TraktChecker():
         	result=TraktCall("show/watchlist/%API%", sickbeard.TRAKT_API, sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_PASSWORD, data)
             elif update=="remove" and sickbeard.TRAKT_REMOVE_SHOW_WATCHLIST:
 	   	result=TraktCall("show/unwatchlist/%API%", sickbeard.TRAKT_API, sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_PASSWORD, data)
+            self._getShowWatchlist()
 	else:
             logger.log(u"Error invoking update_watchlist procedure, check parameter", logger.ERROR)
 	    return False
