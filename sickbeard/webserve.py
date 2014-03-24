@@ -1435,7 +1435,6 @@ class ConfigProviders:
                     continue
 
                 curName, curURL = curTorrentRssProviderStr.split('|')
-                curURL = config.clean_url(curURL)
                     
                 newProvider = rsstorrent.TorrentRssProvider(curName, curURL)
 
