@@ -876,6 +876,12 @@ class TVShow(object):
         for cache_file in ek.ek(glob.glob, ek.ek(os.path.join, image_cache_dir, str(self.tvdbid) + '.*')):
             logger.log(u"Deleting cache file " + cache_file)
             os.remove(cache_file)
+            if sickbeard.TRAKT_REMOVE_SHOW_WATCHLIST and sickbeard.USE_TRAKT:
+                logger.log(u"Removing show: tvdb_id " + self.tvdbid + ", Title " + self.name + " from Watchlist", logger.DEBUG)
+                if sickbeard.traktWatchListCheckerSchedular.action.update_watchlist("show", "remove", self.tvdbid, 0, 0):
+                    sickbeard.traktWatchListCheckerSchedular.action.refreshShowWatchlist()
+                else:
+                    return False
 
     def populateCache(self):
         cache_inst = image_cache.ImageCache()

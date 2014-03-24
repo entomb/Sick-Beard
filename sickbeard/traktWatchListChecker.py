@@ -100,9 +100,14 @@ class TraktChecker():
 
         return True
 
-    def refreshWatchlist(self):
+    def refreshEpisodeWatchlist(self):
 
        if not self._getEpisodeWatchlist():
+           return False
+
+    def refreshShowWatchlist(self):
+
+       if not self._getShowWatchlist():
            return False
 
     def removeEpisodeFromWatchList(self):

@@ -3112,14 +3112,14 @@ class Home:
                 sickbeard.searchQueueScheduler.action.add_item(cur_backlog_queue_item) # @UndefinedVariable
             msg += "</ul>"
             #add episode to watchlist
-            if sickbeard.traktWatchListCheckerSchedular.action.refreshWatchlist():
+            if sickbeard.traktWatchListCheckerSchedular.action.refreshEpisodeWatchlist():
                 sickbeard.traktWatchListCheckerSchedular.action.addEpisodeToWatchList(showObj.tvdbid)
 
             if segment_list:
                 ui.notifications.message("Backlog started", msg)
 
         if int(status) == SKIPPED:           
-            if sickbeard.traktWatchListCheckerSchedular.action.refreshWatchlist():
+            if sickbeard.traktWatchListCheckerSchedular.action.refreshEpisodeWatchlist():
 	        sickbeard.traktWatchListCheckerSchedular.action.removeEpisodeFromWatchList()
 
         if int(status) == FAILED:
