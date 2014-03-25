@@ -117,7 +117,6 @@ class TNTVillageProvider(generic.TorrentProvider):
         
         else:
 
-
 	    login_params = {'UserName': sickbeard.TNTVILLAGE_USERNAME,
                             'PassWord': sickbeard.TNTVILLAGE_PASSWORD,
                             'CookieDate': 1,
