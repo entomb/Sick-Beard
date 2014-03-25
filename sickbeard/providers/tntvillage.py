@@ -117,7 +117,6 @@ class TNTVillageProvider(generic.TorrentProvider):
         
         else:
 
-            logger.log(u'_DoLogin no cookie', logger.DEBUG)       
 
 	    login_params = {'UserName': sickbeard.TNTVILLAGE_USERNAME,
                             'PassWord': sickbeard.TNTVILLAGE_PASSWORD,
@@ -136,8 +135,6 @@ class TNTVillageProvider(generic.TorrentProvider):
             or response.status_code == 401:
                 logger.log(u'Invalid username or password for ' + self.name + ' Check your settings', logger.ERROR)       
                 return False
-
-            logger.log(u'cookie: ' + str(requests.utils.dict_from_cookiejar(self.session.cookies)), logger.DEBUG)       
 
             sickbeard.TNTVILLAGE_UID = requests.utils.dict_from_cookiejar(self.session.cookies)['member_id']
             sickbeard.TNTVILLAGE_HASH = requests.utils.dict_from_cookiejar(self.session.cookies)['pass_hash']
