@@ -263,7 +263,7 @@ class TraktChecker():
                                                             return False
 						wanted = True
 					else:
-                    				self.todoWanted.append((int(show["tvdb_id"]), s, e))
+                    				self.todoWanted.append(int(tvdb_id), s, e)
 				else:
 					logger.log(u"Changed episode to archived: S" + str(s) + "E"+  str(e), logger.DEBUG)
        	        			self.setEpisodeToArchived(newShow, s, e)
