@@ -2906,8 +2906,11 @@ class Home:
                 sickbeard.downloadableSearchScheduler.action.searchDownloadable([showObj]) #@UndefinedVariable
                 time.sleep(1)
             except exceptions.CantUpdateException, e:
-                errors.append("Unable to force an update on the show.")
+                errors.append("Unable to force an update on the downloadable search.")
 
+        if not paused:
+           if not sickbeard.traktWatchListCheckerSchedular.action.updateWantedList():
+                errors.append("Unable to force an update on wanted episode")
 
         if directCall:
             return errors

@@ -193,7 +193,7 @@ class TraktChecker():
 	num_of_download = sickbeard.TRAKT_NUM_EP
 
 	if num_of_download == 0:
-	   return
+	   return False
 
         logger.log(u"Start looking if having " + str(num_of_download) + " episode not watched", logger.DEBUG)
 
@@ -211,7 +211,7 @@ class TraktChecker():
 		last_per_season = TraktCall("show/seasons.json/%API%/" + str(cur_result["tvdb_id"]), sickbeard.TRAKT_API, sickbeard.TRAKT_USERNAME, sickbeard.TRAKT_PASSWORD)
             	if not last_per_season:
             	    logger.log(u"Could not connect to trakt service, cannot download last season for show", logger.ERROR)
-            	    return
+            	    return False
 
 		tvdb_id = str(cur_result["tvdb_id"])
 		show_name = (cur_result["show_name"])
@@ -280,6 +280,7 @@ class TraktChecker():
 		if wanted:
                 	self.startBacklog(newShow)
         logger.log(u"Stop looking if having " + str(num_of_download) + " episode not watched", logger.DEBUG)
+        return True
 
     def updateShows(self):
         logger.log(u"Start looking if some show need to be added to SickBeard", logger.DEBUG)
