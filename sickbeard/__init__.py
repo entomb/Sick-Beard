@@ -31,7 +31,7 @@ from threading import Lock
 # apparently py2exe won't build these unless they're imported somewhere
 from sickbeard import providers, metadata
 from providers import ezrss, tvtorrents, tntvillage, btn, newznab, womble, thepiratebay, torrentleech, kat, publichd, iptorrents, \
-     omgwtfnzbs, scc, hdtorrents, torrentday, hdbits, nextgen, speedcd
+     omgwtfnzbs, scc, hdtorrents, torrentday, hdbits, nextgen, speedcd, binsearch
 from sickbeard.config import CheckSection, check_setting_int, check_setting_str, ConfigMigrator
 
 
@@ -247,6 +247,10 @@ SPEEDCD = False
 SPEEDCD_USERNAME = None
 SPEEDCD_PASSWORD = None
 SPEEDCD_FREELEECH = None
+
+BINSEARCH = False
+BINSEARCH_MAX = None
+BINSEARCH_ALT = None
 
 ADD_SHOWS_WO_DIR = None
 CREATE_MISSING_SHOW_DIRS = None
@@ -487,7 +491,7 @@ def initialize(consoleLogging=True):
                 IPTORRENTS, IPTORRENTS_USERNAME, IPTORRENTS_PASSWORD, IPTORRENTS_FREELEECH, IPTORRENTS_OPTIONS, KAT, KAT_VERIFIED, KAT_OPTIONS, PUBLICHD, PUBLICHD_OPTIONS, SCC, SCC_USERNAME, SCC_PASSWORD, SCC_OPTIONS, HDTORRENTS, HDTORRENTS_USERNAME, HDTORRENTS_PASSWORD, HDTORRENTS_UID, HDTORRENTS_HASH, HDTORRENTS_OPTIONS, TORRENTDAY, TORRENTDAY_USERNAME, TORRENTDAY_PASSWORD, TORRENTDAY_UID, TORRENTDAY_HASH, TORRENTDAY_FREELEECH, TORRENTDAY_OPTIONS, \
 		HDBITS, HDBITS_USERNAME, HDBITS_PASSKEY, HDBITS_OPTIONS, TORRENT_DIR, USENET_RETENTION, SOCKET_TIMEOUT, SEARCH_FREQUENCY, DEFAULT_SEARCH_FREQUENCY, BACKLOG_SEARCH_FREQUENCY, DOWNLOADABLE_SEARCH_FREQUENCY, \
                 TNTVILLAGE, TNTVILLAGE_USERNAME, TNTVILLAGE_PASSWORD, TNTVILLAGE_PAGE, TNTVILLAGE_SUBTITLE, TNTVILLAGE_CATEGORY, TNTVILLAGE_UID, TNTVILLAGE_HASH, TNTVILLAGE_SESSION, TNTVILLAGE_OPTIONS, \
-                NEXTGEN, NEXTGEN_USERNAME, NEXTGEN_PASSWORD, NEXTGEN_FREELEECH, NEXTGEN_OPTIONS, SPEEDCD, SPEEDCD_USERNAME, SPEEDCD_PASSWORD, SPEEDCD_FREELEECH, \
+                NEXTGEN, NEXTGEN_USERNAME, NEXTGEN_PASSWORD, NEXTGEN_FREELEECH, NEXTGEN_OPTIONS, SPEEDCD, SPEEDCD_USERNAME, SPEEDCD_PASSWORD, SPEEDCD_FREELEECH, BINSEARCH, BINSEARCH_MAX, BINSEARCH_ALT, \
 				QUALITY_DEFAULT, FLATTEN_FOLDERS_DEFAULT, SUBTITLES_DEFAULT, STATUS_DEFAULT, \
                 GROWL_NOTIFY_ONSNATCH, GROWL_NOTIFY_ONDOWNLOAD, GROWL_NOTIFY_ONSUBTITLEDOWNLOAD, TWITTER_NOTIFY_ONSNATCH, TWITTER_NOTIFY_ONDOWNLOAD, TWITTER_NOTIFY_ONSUBTITLEDOWNLOAD, \
                 USE_GROWL, GROWL_HOST, GROWL_PASSWORD, USE_PROWL, PROWL_NOTIFY_ONSNATCH, PROWL_NOTIFY_ONDOWNLOAD, PROWL_NOTIFY_ONSUBTITLEDOWNLOAD, PROWL_API, PROWL_PRIORITY, PROG_DIR, \
@@ -737,6 +741,10 @@ def initialize(consoleLogging=True):
         SPEEDCD_PASSWORD = check_setting_str(CFG, 'SPEEDCD', 'speedcd_password', '')
         SPEEDCD_FREELEECH = bool(check_setting_int(CFG, 'SPEEDCD', 'speedcd_freeleech', 0))
 
+        BINSEARCH = bool(check_setting_int(CFG, 'BinSearch', 'binsearch', 0))
+        BINSEARCH_MAX = check_setting_str(CFG, 'BinSearch', 'binsearch_max', '')
+        BINSEARCH_ALT = check_setting_str(CFG, 'BinSearch', 'binsearch_alt', '')
+        
         NZBS = bool(check_setting_int(CFG, 'NZBs', 'nzbs', 0))
         NZBS_UID = check_setting_str(CFG, 'NZBs', 'nzbs_uid', '')
         NZBS_HASH = check_setting_str(CFG, 'NZBs', 'nzbs_hash', '')
@@ -1474,6 +1482,11 @@ def save_config():
     new_config['SPEEDCD']['speedcd_username'] = SPEEDCD_USERNAME
     new_config['SPEEDCD']['speedcd_password'] = helpers.encrypt(SPEEDCD_PASSWORD, ENCRYPTION_VERSION)
     new_config['SPEEDCD']['speedcd_freeleech'] = int(SPEEDCD_FREELEECH)
+
+    new_config['BinSearch'] = {}
+    new_config['BinSearch']['binsearch'] = int(BINSEARCH)
+    new_config['BinSearch']['binsearch_max'] = BINSEARCH_MAX
+    new_config['BinSearch']['binsearch_alt'] = BINSEARCH_ALT
 
     new_config['NZBs'] = {}
     new_config['NZBs']['nzbs'] = int(NZBS)
