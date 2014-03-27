@@ -56,6 +56,13 @@
                                 </label>
                             </div>
                             <div class="field-pair">
+                                <input type="checkbox" name="xbmc_notify_ondownloadable" id="xbmc_notify_ondownloadable" #if $sickbeard.XBMC_NOTIFY_ONDOWNLOADABLE then "checked=\"checked\"" else ""# />
+                                <label class="clearfix" for="xbmc_notify_ondownloadable">
+                                    <span class="component-title">Notify on Episode Availability</span>
+                                    <span class="component-desc">Send notification when an episode is available?</span>
+                                </label>
+                            </div>
+                            <div class="field-pair">
                                 <input type="checkbox" name="xbmc_notify_onsubtitledownload" id="xbmc_notify_onsubtitledownload" #if $sickbeard.XBMC_NOTIFY_ONSUBTITLEDOWNLOAD then "checked=\"checked\"" else ""# />
                                 <label class="clearfix" for="xbmc_notify_onsubtitledownload">
                                     <span class="component-title">Notify on Subtitle Download</span>
@@ -158,6 +165,13 @@
                                 <label class="clearfix" for="plex_notify_ondownload">
                                     <span class="component-title">Notify on Download</span>
                                     <span class="component-desc">Send notification when we finish a download?</span>
+                                </label>
+                            </div>
+                            <div class="field-pair">
+                                <input type="checkbox" name="plex_notify_ondownloadable" id="plex_notify_ondownloadable" #if $sickbeard.PLEX_NOTIFY_ONDOWNLOADABLE then "checked=\"checked\"" else ""# />
+                                <label class="clearfix" for="plex_notify_ondownloadable">
+                                    <span class="component-title">Notify on Episode Availability</span>
+                                    <span class="component-desc">Send notification when an episode is available?</span>
                                 </label>
                             </div>
                             <div class="field-pair">
@@ -435,6 +449,13 @@
                                 </label>
                             </div>
                             <div class="field-pair">
+                                <input type="checkbox" name="synologynotifier_notify_ondownloadable" id="synologynotifier_notify_ondownloadable" #if $sickbeard.SYNOLOGYNOTIFIER_NOTIFY_ONDOWNLOADABLE then "checked=\"checked\"" else ""# />
+                                <label class="clearfix" for="synologynotifier_notify_ondownloadable">
+                                    <span class="component-title">Notify on Episode Availability</span>
+                                    <span class="component-desc">Send notification when an episode is available?</span>
+                                </label>
+                            </div>
+                            <div class="field-pair">
                                 <input type="checkbox" name="synologynotifier_notify_onsubtitledownload" id="synologynotifier_notify_onsubtitledownload" #if $sickbeard.SYNOLOGYNOTIFIER_NOTIFY_ONSUBTITLEDOWNLOAD then "checked=\"checked\"" else ""# />
                                 <label class="clearfix" for="synologynotifier_notify_onsubtitledownload">
                                     <span class="component-title">Notify on Subtitle Download</span>
@@ -536,6 +557,13 @@
                                 </label>
                             </div>
                             <div class="field-pair">
+                                <input type="checkbox" name="growl_notify_ondownloadable" id="growl_notify_ondownloadable" #if $sickbeard.GROWL_NOTIFY_ONDOWNLOADABLE then "checked=\"checked\"" else ""# />
+                                <label class="clearfix" for="growl_notify_ondownloadable">
+                                    <span class="component-title">Notify on Episode Availability</span>
+                                    <span class="component-desc">Send notification when an episode is available?</span>
+                                </label>
+                            </div>
+                            <div class="field-pair">
                                 <input type="checkbox" name="growl_notify_onsubtitledownload" id="growl_notify_onsubtitledownload" #if $sickbeard.GROWL_NOTIFY_ONSUBTITLEDOWNLOAD then "checked=\"checked\"" else ""# />
                                 <label class="clearfix" for="growl_notify_onsubtitledownload">
                                     <span class="component-title">Notify on Subtitle Download</span>
@@ -602,6 +630,13 @@
                                 <label class="clearfix" for="prowl_notify_ondownload">
                                     <span class="component-title">Notify on Download</span>
                                     <span class="component-desc">Send notification when we finish a download?</span>
+                                </label>
+                            </div>
+                            <div class="field-pair">
+                                <input type="checkbox" name="prowl_notify_ondownloadable" id="prowl_notify_ondownloadable" #if $sickbeard.PROWL_NOTIFY_ONDOWNLOADABLE then "checked=\"checked\"" else ""# />
+                                <label class="clearfix" for="prowl_notify_ondownloadable">
+                                    <span class="component-title">Notify on Episode Availability</span>
+                                    <span class="component-desc">Send notification when an episode is available?</span>
                                 </label>
                             </div>
                             <div class="field-pair">
@@ -676,6 +711,13 @@
                                 </label>
                             </div>
                             <div class="field-pair">
+                                <input type="checkbox" name="libnotify_notify_ondownloadable" id="libnotify_notify_ondownloadable" #if $sickbeard.LIBNOTIFY_NOTIFY_ONDOWNLOADABLE then "checked=\"checked\"" else ""# />
+                                <label class="clearfix" for="libnotify_notify_ondownloadable">
+                                    <span class="component-title">Notify on Episode Availability</span>
+                                    <span class="component-desc">Send notification when an episode is available?</span>
+                                </label>
+                            </div>
+                            <div class="field-pair">
                                 <input type="checkbox" name="libnotify_notify_onsubtitledownload" id="libnotify_notify_onsubtitledownload" #if $sickbeard.LIBNOTIFY_NOTIFY_ONSUBTITLEDOWNLOAD then "checked=\"checked\"" else ""# />
                                 <label class="clearfix" for="libnotify_notify_onsubtitledownload">
                                     <span class="component-title">Notify on Subtitle Download</span>
@@ -718,6 +760,13 @@
                                 <label class="clearfix" for="pushover_notify_ondownload">
                                     <span class="component-title">Notify on Download</span>
                                     <span class="component-desc">Send notification when we finish a download?</span>
+                                </label>
+                            </div>
+                            <div class="field-pair">
+                                <input type="checkbox" name="pushover_notify_ondownloadable" id="pushover_notify_ondownloadable" #if $sickbeard.PUSHOVER_NOTIFY_ONDOWNLOADABLE then "checked=\"checked\"" else ""# />
+                                <label class="clearfix" for="pushover_notify_ondownloadable">
+                                    <span class="component-title">Notify on Episode Availability</span>
+                                    <span class="component-desc">Send notification when an episode is available?</span>
                                 </label>
                             </div>
                             <div class="field-pair">
@@ -775,6 +824,13 @@
                                 </label>
                             </div>
                             <div class="field-pair">
+                                <input type="checkbox" name="boxcar_notify_ondownloadable" id="boxcar_notify_ondownloadable" #if $sickbeard.BOXCAR_NOTIFY_ONDOWNLOADABLE then "checked=\"checked\"" else ""# />
+                                <label class="clearfix" for="boxcar_notify_ondownloadable">
+                                    <span class="component-title">Notify on Episode Availability</span>
+                                    <span class="component-desc">Send notification when an episode is available?</span>
+                                </label>
+                            </div>
+                            <div class="field-pair">
                                 <input type="checkbox" name="boxcar_notify_onsubtitledownload" id="boxcar_notify_onsubtitledownload" #if $sickbeard.BOXCAR_NOTIFY_ONSUBTITLEDOWNLOAD then "checked=\"checked\"" else ""# />
                                 <label class="clearfix" for="boxcar_notify_onsubtitledownload">
                                     <span class="component-title">Notify on Subtitle Download</span>
@@ -827,6 +883,13 @@
                                 <label class="clearfix" for="nma_notify_ondownload">
                                     <span class="component-title">Notify on Download</span>
                                     <span class="component-desc">Send notification when we finish a download?</span>
+                                </label>
+                            </div>
+                            <div class="field-pair">
+                                <input type="checkbox" name="nma_notify_ondownloadable" id="nma_notify_ondownloadable" #if $sickbeard.NMA_NOTIFY_ONDOWNLOADABLE then "checked=\"checked\"" else ""# />
+                                <label class="clearfix" for="nma_notify_ondownloadable">
+                                    <span class="component-title">Notify on Episode Availability</span>
+                                    <span class="component-desc">Send notification when an episode is available?</span>
                                 </label>
                             </div>
                             <div class="field-pair">
@@ -897,6 +960,13 @@
                                 <label class="clearfix" for="pushalot_notify_ondownload">
                                     <span class="component-title">Notify on Download</span>
                                     <span class="component-desc">Send notification when we finish a download?</span>
+                                </label>
+                            </div>
+                            <div class="field-pair">
+                                <input type="checkbox" name="pushalot_notify_ondownloadable" id="pushalot_notify_ondownloadable" #if $sickbeard.PUSHALOT_NOTIFY_ONDOWNLOADABLE then "checked=\"checked\"" else ""# />
+                                <label class="clearfix" for="pushalot_notify_ondownloadable">
+                                    <span class="component-title">Notify on Episode Availability</span>
+                                    <span class="component-desc">Send notification when an episode is available?</span>
                                 </label>
                             </div>
                             <div class="field-pair">
@@ -1031,6 +1101,13 @@
                                 <label class="clearfix" for="twitter_notify_ondownload">
                                     <span class="component-title">Notify on Download</span>
                                     <span class="component-desc">Send notification when we finish a download?</span>
+                                </label>
+                            </div>
+                            <div class="field-pair">
+                                <input type="checkbox" name="twitter_notify_ondownloadable" id="twitter_notify_ondownloadable" #if $sickbeard.TWITTER_NOTIFY_ONDOWNLOADABLE then "checked=\"checked\"" else ""# />
+                                <label class="clearfix" for="twitter_notify_ondownloadable">
+                                    <span class="component-title">Notify on Episode Availability</span>
+                                    <span class="component-desc">Send notification when an episode is available?</span>
                                 </label>
                             </div>
                             <div class="field-pair">
@@ -1204,6 +1281,13 @@
                                 <label class="clearfix" for="email_notify_ondownload">
                                     <span class="component-title">Notify on Download</span>
                                     <span class="component-desc">Send notification when we finish a download?</span>
+                                </label>
+                            </div>
+                            <div class="field-pair">
+                                <input type="checkbox" name="email_notify_ondownloadable" id="email_notify_ondownloadable" #if $sickbeard.EMAIL_NOTIFY_ONDOWNLOADABLE then "checked=\"checked\"" else ""# />
+                                <label class="clearfix" for="email_notify_ondownloadable">
+                                    <span class="component-title">Notify on Episode Availability</span>
+                                    <span class="component-desc">Send notification when an episode is available?</span>
                                 </label>
                             </div>
                             <div class="field-pair">

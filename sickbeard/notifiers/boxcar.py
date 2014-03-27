@@ -23,7 +23,7 @@ import time
 import sickbeard
 
 from sickbeard import logger
-from sickbeard.common import notifyStrings, NOTIFY_SNATCH, NOTIFY_DOWNLOAD, NOTIFY_SUBTITLE_DOWNLOAD
+from sickbeard.common import notifyStrings, NOTIFY_SNATCH, NOTIFY_DOWNLOAD, NOTIFY_DOWNLOADABLE, NOTIFY_SUBTITLE_DOWNLOAD
 from sickbeard.exceptions import ex
 
 API_URL = "https://boxcar.io/devices/providers/fWc4sgSmpcN6JujtBmR6/notifications"
@@ -117,6 +117,10 @@ class BoxcarNotifier:
 
     def notify_download(self, ep_name, title=notifyStrings[NOTIFY_DOWNLOAD]):
         if sickbeard.BOXCAR_NOTIFY_ONDOWNLOAD:
+            self._notifyBoxcar(title, ep_name)
+
+    def notify_downloadable(self, ep_name, title=notifyStrings[NOTIFY_DOWNLOADABLE]):
+        if sickbeard.BOXCAR_NOTIFY_ONDOWNLOADABLE:
             self._notifyBoxcar(title, ep_name)
 
     def notify_subtitle_download(self, ep_name, lang, title=notifyStrings[NOTIFY_SUBTITLE_DOWNLOAD]):
