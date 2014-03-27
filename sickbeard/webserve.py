@@ -1373,6 +1373,7 @@ class ConfigProviders:
                       hdbits_username=None, hdbits_passkey=None,
 					  nextgen_username=None, nextgen_password=None,
                       speedcd_username=None, speedcd_password=None, speedcd_freeleech=None,
+                      binsearch_max=None, binsearch_alt=None,
                       newzbin_username=None, newzbin_password=None,
                       provider_order=None):
 
@@ -1435,7 +1436,6 @@ class ConfigProviders:
                     continue
 
                 curName, curURL = curTorrentRssProviderStr.split('|')
-                curURL = config.clean_url(curURL)
                     
                 newProvider = rsstorrent.TorrentRssProvider(curName, curURL)
 
@@ -1506,6 +1506,8 @@ class ConfigProviders:
                 sickbeard.NEXTGEN = curEnabled
             elif curProvider == 'speedcd':
                 sickbeard.SPEEDCD = curEnabled
+            elif curProvider == 'binsearch':
+            	sickbeard.BINSEARCH = curEnabled
             elif curProvider in newznabProviderDict:
                 newznabProviderDict[curProvider].enabled = bool(curEnabled)
             elif curProvider in torrentRssProviderDict:
@@ -1566,6 +1568,9 @@ class ConfigProviders:
         sickbeard.SPEEDCD_USERNAME = speedcd_username.strip()
         sickbeard.SPEEDCD_PASSWORD = speedcd_password.strip()
         sickbeard.SPEEDCD_FREELEECH = config.checkbox_to_value(speedcd_freeleech)
+        
+        sickbeard.BINSEARCH_MAX = binsearch_max
+        sickbeard.BINSEARCH_ALT = binsearch_alt.strip()
 
         sickbeard.NEWZNAB_DATA = '!!!'.join([x.configStr() for x in sickbeard.newznabProviderList])
         sickbeard.PROVIDER_ORDER = provider_list
@@ -2920,8 +2925,11 @@ class Home:
                 sickbeard.downloadableSearchScheduler.action.searchDownloadable([showObj]) #@UndefinedVariable
                 time.sleep(1)
             except exceptions.CantUpdateException, e:
-                errors.append("Unable to force an update on the show.")
+                errors.append("Unable to force an update on the downloadable search.")
 
+        if not paused:
+           if not sickbeard.traktWatchListCheckerSchedular.action.updateWantedList():
+                errors.append("Unable to force an update on wanted episode")
 
         if directCall:
             return errors
@@ -3126,15 +3134,15 @@ class Home:
                 sickbeard.searchQueueScheduler.action.add_item(cur_backlog_queue_item) # @UndefinedVariable
             msg += "</ul>"
             #add episode to watchlist
-            sickbeard.traktWatchListCheckerSchedular.action.refreshWatchlist()
-            sickbeard.traktWatchListCheckerSchedular.action.addEpisodeToWatchList(showObj.tvdbid)
+            if sickbeard.traktWatchListCheckerSchedular.action.refreshEpisodeWatchlist():
+                sickbeard.traktWatchListCheckerSchedular.action.addEpisodeToWatchList(showObj.tvdbid)
 
             if segment_list:
                 ui.notifications.message("Backlog started", msg)
 
         if int(status) == SKIPPED:           
-            sickbeard.traktWatchListCheckerSchedular.action.refreshWatchlist()
-	    sickbeard.traktWatchListCheckerSchedular.action.removeEpisodeFromWatchList()
+            if sickbeard.traktWatchListCheckerSchedular.action.refreshEpisodeWatchlist():
+	        sickbeard.traktWatchListCheckerSchedular.action.removeEpisodeFromWatchList()
 
         if int(status) == FAILED:
             msg = "Retring Search was automatically started for the following season of <b>" + showObj.name + "</b>:<br />"

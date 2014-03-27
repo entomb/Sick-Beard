@@ -91,7 +91,9 @@ class TNTVillageProvider(generic.TorrentProvider):
 
         self.url = self.urls['base_url']
 
-        self.session = None
+        self.session = requests.Session()
+
+	self.cookies = None
 
     def isEnabled(self):
         return sickbeard.TNTVILLAGE
@@ -106,26 +108,42 @@ class TNTVillageProvider(generic.TorrentProvider):
 
     def _doLogin(self):
 
-        login_params = {'UserName': sickbeard.TNTVILLAGE_USERNAME,
-                        'PassWord': sickbeard.TNTVILLAGE_PASSWORD,
-                        'CookieDate': 1,
-                        'submit': 'Connettiti al Forum',
-                        }
+        if any(requests.utils.dict_from_cookiejar(self.session.cookies).values()):
+            return True
+        
+        if sickbeard.TNTVILLAGE_UID and sickbeard.TNTVILLAGE_HASH and sickbeard.TNTVILLAGE_SESSION:
+            
+            requests.utils.add_dict_to_cookiejar(self.session.cookies, self.cookies)
+        
+        else:
 
-        self.session = requests.Session()
+	    login_params = {'UserName': sickbeard.TNTVILLAGE_USERNAME,
+                            'PassWord': sickbeard.TNTVILLAGE_PASSWORD,
+                            'CookieDate': 1,
+                            'submit': 'Connettiti al Forum',
+                            }
 
-        try:
-            response = self.session.post(self.urls['login'], data=login_params, timeout=30)
-        except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError), e:
-            logger.log(u'Unable to connect to ' + self.name + ' provider: ' +ex(e), logger.ERROR)
-            return False
+            try:
+                response = self.session.post(self.urls['login'], data=login_params, timeout=30)
+            except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError), e:
+                logger.log(u'Unable to connect to ' + self.name + ' provider: ' +ex(e), logger.ERROR)
+                return False
 
-        if re.search('Sono stati riscontrati i seguenti errori', response.text) \
-        or re.search('<title>Connettiti</title>', response.text) \
-        or response.status_code == 401:
-            logger.log(u'Invalid username or password for ' + self.name + ' Check your settings', logger.ERROR)       
-            return False
+            if re.search('Sono stati riscontrati i seguenti errori', response.text) \
+            or re.search('<title>Connettiti</title>', response.text) \
+            or response.status_code == 401:
+                logger.log(u'Invalid username or password for ' + self.name + ' Check your settings', logger.ERROR)       
+                return False
 
+            sickbeard.TNTVILLAGE_UID = requests.utils.dict_from_cookiejar(self.session.cookies)['member_id']
+            sickbeard.TNTVILLAGE_HASH = requests.utils.dict_from_cookiejar(self.session.cookies)['pass_hash']
+            sickbeard.TNTVILLAGE_SESSION = requests.utils.dict_from_cookiejar(self.session.cookies)['session_id']
+  
+            self.cookies = {'member_id': sickbeard.TNTVILLAGE_UID,
+                            'pass_hash': sickbeard.TNTVILLAGE_HASH,
+                            'session_id': sickbeard.TNTVILLAGE_SESSION 
+                            }
+               
         return True
 
     def _get_season_search_strings(self, show, season=None):
