@@ -44,10 +44,10 @@ NOTIFY_SUBTITLE_DOWNLOAD = 3
 NOTIFY_DOWNLOADABLE = 4
 
 notifyStrings = {}
-notifyStrings[NOTIFY_SNATCH] = "Started Download"
+notifyStrings[NOTIFY_SNATCH] = "Download Started "
 notifyStrings[NOTIFY_DOWNLOAD] = "Download Finished"
 notifyStrings[NOTIFY_DOWNLOADABLE] = "Download Available"
-notifyStrings[NOTIFY_SUBTITLE_DOWNLOAD] = "Subtitle Download Finished"
+notifyStrings[NOTIFY_SUBTITLE_DOWNLOAD] = "Download Subtitle inished"
 
 ### Episode statuses
 UNKNOWN = -1 # should never happen
