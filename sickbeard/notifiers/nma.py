@@ -16,7 +16,7 @@ class NMA_Notifier:
         if sickbeard.NMA_NOTIFY_ONDOWNLOAD:
             self._sendNMA(nma_api=None, nma_priority=None, event=common.notifyStrings[common.NOTIFY_DOWNLOAD], message=ep_name)
 
-    def notify_notify_downloadable(self, ep_name):
+    def notify_downloadable(self, ep_name):
         if sickbeard.NMA_NOTIFY_ONDOWNLOADABLE:
             self._sendNMA(nma_api=None, nma_priority=None, event=common.notifyStrings[common.NOTIFY_DOWNLOADABLE], message=ep_name)
 
