@@ -91,7 +91,7 @@ class NMJNotifier:
         if sickbeard.USE_NMJ:
             self._notifyNMJ()
 
-    def notify_download(self, ep_name):
+    def notify_downloadable(self, ep_name):
         return False
 
     def notify_subtitle_download(self, ep_name, lang):
