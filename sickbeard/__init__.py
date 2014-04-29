@@ -1096,7 +1096,7 @@ def initialize(consoleLogging=True):
         downloadableSearchScheduler = searchDownloadable.DownloadableSearchScheduler(searchDownloadable.DownloadableSearcher(),
                                                                       cycleTime=datetime.timedelta(minutes=get_downloadable_search_cycle_time()),
                                                                       threadName="DOWNLOADABLE_SEARCH",
-                                                                      runImmediately=True)
+                                                                      runImmediately=False)
         downloadableSearchScheduler.action.cycleTime = DOWNLOADABLE_SEARCH_FREQUENCY
 
         subtitlesFinderScheduler = scheduler.Scheduler(subtitles.SubtitlesFinder(),
