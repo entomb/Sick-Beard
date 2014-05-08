@@ -384,7 +384,7 @@ class TVCache():
 	    	if not episode:
             		ListCurEp = curResult["episodes"].split("|")
 	    	else:
-            		ListcurEp = episode.episode
+            		ListCurEp = episode.episode
 	    else:
 		ListCurEp = curResult["episodes"].split("|")[1]
 
