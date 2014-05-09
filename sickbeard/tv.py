@@ -1093,7 +1093,7 @@ class TVShow(object):
 
         # if it's one of these then we want it as long as it's in our allowed initial qualities
         if quality in anyQualities + bestQualities:
-            if epStatus in (WANTED, UNAIRED, SKIPPED):
+            if epStatus in (WANTED, UNAIRED, SKIPPED, FAILED):
                 logger.log(u"Existing episode status is wanted/unaired/skipped, definitely mark it downloadable", logger.DEBUG)
                 return True
             elif manualSearch:
