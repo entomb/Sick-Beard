@@ -422,6 +422,17 @@ class TNTVillageProvider(generic.TorrentProvider):
                     			#Continue only if one Release is found
 					a=len(torrent_rows)
 					logger.log(u"Num of Row: "+ str(a), logger.DEBUG)
+                                        if len(torrent_rows) == 0:
+
+                                            sickbeard.TNTVILLAGE_UID = ""
+                                            sickbeard.TNTVILLAGE_HASH = ""
+                                            sickbeard.TNTVILLAGE_SESSION = ""
+
+                                            if not self._doLogin():
+                                                return []
+
+                                            continue
+
                     			if len(torrent_rows)<3:
                         			logger.log(u"The Data returned from " + self.name + " do not contains any torrent", logger.DEBUG)
 						last_page=1
