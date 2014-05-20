@@ -24,12 +24,14 @@ import time
 import sickbeard
 from sickbeard import db, logger, common, exceptions, helpers
 from sickbeard import generic_queue
-from sickbeard import search, failed_history
+from sickbeard import search, failed_history, history
 from sickbeard import ui
+from sickbeard.common import Quality
 
 BACKLOG_SEARCH = 10
 RSS_SEARCH = 20
 MANUAL_SEARCH = 30
+DOWNLOADABLE_SEARCH = 5
 
 
 class SearchQueue(generic_queue.GenericQueue):
@@ -76,8 +78,74 @@ class SearchQueue(generic_queue.GenericQueue):
             generic_queue.GenericQueue.add_item(self, item)
         elif isinstance(item, FailedQueueItem) and not self.is_in_queue(item.show, item.segment):
             generic_queue.GenericQueue.add_item(self, item)
+	elif isinstance(item, DownloadSearchQueueItem) and not self.is_in_queue(item.show, item.segment):
+            generic_queue.GenericQueue.add_item(self, item)
         else:
             logger.log(u"Not adding item, it's already in the queue", logger.DEBUG)
+
+class DownloadSearchQueueItem(generic_queue.QueueItem):
+    def __init__(self, show, segment):
+        generic_queue.QueueItem.__init__(self, 'Downloadable Search', DOWNLOADABLE_SEARCH)
+        self.priority = generic_queue.QueuePriorities.LOW
+        self.thread_name = 'DOWNLOADABLE_SEARCH-' + str(show.tvdbid)
+
+        self.show = show
+        self.segment = segment
+
+        logger.log(u"Seeing if is available any episodes from " + self.show.name + " season " + str(self.segment))
+
+        myDB = db.DBConnection()
+
+        # see if there is anything in this season worth searching for
+        if not self.show.air_by_date:
+            statusResults = myDB.select("SELECT status FROM tv_episodes WHERE showid = ? AND season = ?", [self.show.tvdbid, self.segment])
+        else:
+            segment_year, segment_month = map(int, self.segment.split('-'))
+            min_date = datetime.date(segment_year, segment_month, 1)
+
+            # it's easier to just hard code this than to worry about rolling the year over or making a month length map
+            if segment_month == 12:
+                max_date = datetime.date(segment_year, 12, 31)
+            else:
+                max_date = datetime.date(segment_year, segment_month + 1, 1) - datetime.timedelta(days=1)
+
+            statusResults = myDB.select("SELECT status FROM tv_episodes WHERE showid = ? AND airdate >= ? AND airdate <= ?",
+                                        [self.show.tvdbid, min_date.toordinal(), max_date.toordinal()])
+
+        anyQualities, bestQualities = common.Quality.splitQuality(self.show.quality) #@UnusedVariable
+        self.availableSeason = self._available_any_episodes(statusResults, bestQualities)
+
+    def execute(self):
+
+        generic_queue.QueueItem.execute(self)
+
+        results = search.findSeason(self.show, self.segment, "skipEp")
+
+        # mark downloadable whatever we find
+	for result in results:
+            search.downloadableEpisode(result)
+            
+        self.finish()
+
+    def _available_any_episodes(self, statusResults, bestQualities):
+
+        availableSeason = False
+
+        # check through the list of statuses to see if we want any
+        for curStatusResult in statusResults:
+            curCompositeStatus = int(curStatusResult["status"])
+            curStatus, curQuality = common.Quality.splitCompositeStatus(curCompositeStatus)
+
+            if bestQualities:
+                highestBestQuality = max(bestQualities)
+            else:
+                highestBestQuality = 0
+
+            if curStatus == common.SKIPPED:
+                availableSeason = True
+                break
+
+        return availableSeason
 
 class ManualSearchQueueItem(generic_queue.QueueItem):
     def __init__(self, ep_obj):
@@ -134,16 +202,23 @@ class RSSSearchQueueItem(generic_queue.QueueItem):
 
         if not len(foundResults):
             logger.log(u"No needed episodes found on the RSS feeds")
-        else:
-            for curResult in foundResults:
+
+        for curResult in foundResults:
+
+            logger.log(u"Analizing Show: " + curResult.episodes[0].show.name + ", tvdb_id: " + str(curResult.episodes[0].show.tvdbid), logger.DEBUG)
+
+            if not curResult.episodes[0].show.paused:
                 search.snatchEpisode(curResult)
                 time.sleep(2)
+            else:
+                search.downloadableEpisode(curResult)
+                time.sleep(1)
 
         generic_queue.QueueItem.finish(self)
 
     def _changeMissingEpisodes(self):
 
-        logger.log(u"Changing all old missing episodes to status WANTED")
+        logger.log(u"Changing all old missing episodes to status WANTED/SKIPPED")
 
         curDate = datetime.date.today().toordinal()
 
@@ -167,7 +242,21 @@ class RSSSearchQueueItem(generic_queue.QueueItem):
                 if ep.show.paused:
                     ep.status = common.SKIPPED
                 else:
-                    ep.status = common.WANTED
+
+                    myDB = db.DBConnection()
+                    sql_selection="SELECT show_name, tvdb_id, season, episode, paused FROM (SELECT * FROM tv_shows s,tv_episodes e WHERE s.tvdb_id = e.showid) T1 WHERE T1.paused = 0 and T1.episode_id IN (SELECT T2.episode_id FROM tv_episodes T2 WHERE T2.showid = T1.tvdb_id and T2.status in (?,?,?,?) and T2.season!=0 ORDER BY T2.season,T2.episode LIMIT 1) ORDER BY T1.show_name,season,episode"
+                    results = myDB.select(sql_selection, [common.SNATCHED, common.WANTED, common.SKIPPED, common.DOWNLOADABLE])
+
+                    show_sk = [show for show in results if show["tvdb_id"] == sqlEp["showid"]]
+		    if not show_sk:
+			ep.status = common.WANTED
+                    else:
+                        sn_sk = show_sk[0]["season"]
+                        ep_sk = show_sk[0]["episode"]
+                        if (int(sn_sk)*100+int(ep_sk)) < (int(sqlEp["season"])*100+int(sqlEp["episode"])) or not show_sk:
+                    	    ep.status = common.SKIPPED
+		        else:
+                    	    ep.status = common.WANTED
                 ep.saveToDB()
 
 class BacklogQueueItem(generic_queue.QueueItem):
@@ -199,7 +288,7 @@ class BacklogQueueItem(generic_queue.QueueItem):
             statusResults = myDB.select("SELECT status FROM tv_episodes WHERE showid = ? AND airdate >= ? AND airdate <= ?",
                                         [self.show.tvdbid, min_date.toordinal(), max_date.toordinal()])
 
-        anyQualities, bestQualities = common.Quality.splitQuality(self.show.quality)  # @UnusedVariable
+        anyQualities, bestQualities = common.Quality.splitQuality(self.show.quality) #@UnusedVariable
         self.wantSeason = self._need_any_episodes(statusResults, bestQualities)
 
     def execute(self):
@@ -210,9 +299,8 @@ class BacklogQueueItem(generic_queue.QueueItem):
 
         # download whatever we find
         for curResult in results:
-            if curResult:
-                search.snatchEpisode(curResult)
-                time.sleep(5)
+            search.snatchEpisode(curResult)
+            time.sleep(5)
 
         self.finish()
 
@@ -239,79 +327,42 @@ class BacklogQueueItem(generic_queue.QueueItem):
 
 class FailedQueueItem(generic_queue.QueueItem):
 
-    def __init__(self, show, segment=None, ep_obj=None):
+    def __init__(self, show, segment):
         generic_queue.QueueItem.__init__(self, 'Retry', MANUAL_SEARCH)
         self.priority = generic_queue.QueuePriorities.HIGH
         self.thread_name = 'RETRY-' + str(show.tvdbid)
 
         self.show = show
         self.segment = segment
-        self.ep_obj = ep_obj
-        
+
         self.success = None
 
     def execute(self):
         generic_queue.QueueItem.execute(self)
 
-        if self.ep_obj:
-            try:
-                ep_release_name = failed_history.findRelease(self.show.tvdbid, self.ep_obj.season, self.ep_obj.episode)
-                failed_history.revertEpisodes(self.show, self.ep_obj.season, [self.ep_obj.episode])
-                failed_history.logFailed(ep_release_name)
-            except:
-                pass
-            
-            foundEpisode = search.findEpisode(self.ep_obj, manualSearch=True)
-            result = False
+        for season, episode in self.segment.iteritems():
+            epObj = self.show.getEpisode(season, episode)
 
-            if not foundEpisode:
-                ui.notifications.message('No downloads were found', "Couldn't find a download for <i>%s</i>" % self.ep_obj.prettyName())
-                logger.log(u"Unable to find a download for " + self.ep_obj.prettyName())
+            (release, provider) = failed_history.findRelease(self.show, season, episode)
+            if release:
+                logger.log(u"Marking release as bad: " + release)
+                failed_history.markFailed(self.show, season, episode)
+                failed_history.logFailed(release)
+                history.logFailed(self.show.tvdbid, season, episode, epObj.status, release, provider)
+
+            failed_history.revertEpisode(self.show, season, episode)
+
+        for season, episode in self.segment.iteritems():
+            epObj = self.show.getEpisode(season, episode)
+
+            if self.show.air_by_date:
+                results = search.findSeason(self.show, str(epObj.airdate)[:7])
             else:
-                # just use the first result for now
-                logger.log(u"Downloading episode from " + foundEpisode.url)
-                result = search.snatchEpisode(foundEpisode)
-                providerModule = foundEpisode.provider
-                if not result:
-                    ui.notifications.error('Error while attempting to snatch ' + foundEpisode.name+', check your logs')
-                elif providerModule == None:
-                    ui.notifications.error('Provider is configured incorrectly, unable to download')
-    
-            self.success = result
-
-        else:    
-    
-            results = []
-            myDB = db.DBConnection()
-    
-            if not self.show.air_by_date:
-                sqlResults = myDB.select("SELECT episode FROM tv_episodes WHERE showid = ? AND season = ? AND status IN (" + ",".join([str(x) for x in common.Quality.FAILED]) + ")", [self.show.tvdbid, self.segment])
-            else:
-                segment_year, segment_month = map(int, self.segment.split('-'))
-                min_date = datetime.date(segment_year, segment_month, 1)
-    
-                # it's easier to just hard code this than to worry about rolling the year over or making a month length map
-                if segment_month == 12:
-                    max_date = datetime.date(segment_year, 12, 31)
-                else:
-                    max_date = datetime.date(segment_year, segment_month + 1, 1) - datetime.timedelta(days=1)
-    
-                sqlResults = myDB.select("SELECT episode FROM tv_episodes WHERE showid = ? AND airdate >= ? AND airdate <= ? AND status IN (" + ",".join([str(x) for x in common.Quality.FAILED]) + ")",
-                                            [self.show.tvdbid, min_date.toordinal(), max_date.toordinal()])
-            
-            for result in sqlResults:
-                try:
-                    ep_release_name = failed_history.findRelease(self.show.tvdbid, self.ep_obj.season, self.ep_obj.episode)
-                    failed_history.revertEpisodes(self.show, self.segment, [result["episode"]])
-                    failed_history.logFailed(ep_release_name)
-                except:
-                    pass
-
-                results = search.findSeason(self.show, self.segment)
+                results = search.findSeason(self.show, season)
 
             # download whatever we find
             for curResult in results:
-                search.snatchEpisode(curResult)
+                self.success = search.snatchEpisode(curResult)
                 time.sleep(5)
 
         self.finish()

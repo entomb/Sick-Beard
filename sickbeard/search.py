@@ -25,7 +25,7 @@ import re
 
 import sickbeard
 
-from common import SNATCHED, SNATCHED_PROPER, Quality, SEASON_RESULT, MULTI_EP_RESULT
+from common import SNATCHED, SNATCHED_PROPER, DOWNLOADABLE, Quality, SEASON_RESULT, MULTI_EP_RESULT
 
 from sickbeard import logger, db, show_name_helpers, exceptions, helpers
 from sickbeard import sab
@@ -158,10 +158,33 @@ def snatchEpisode(result, endStatus=SNATCHED):
     for curEpObj in result.episodes:
         with curEpObj.lock:
             curEpObj.status = Quality.compositeStatus(endStatus, result.quality)
+	    if result.resultType == "torrent":
+	    	curEpObj.torrent_hash = client._get_torrent_hash(result)
             curEpObj.saveToDB()
 
         if curEpObj.status not in Quality.DOWNLOADED:
             notifiers.notify_snatch(curEpObj._format_pattern('%SN - %Sx%0E - %EN - %QN'))
+
+    return True
+
+def downloadableEpisode(result, endStatus=DOWNLOADABLE):
+    """
+    Contains the internal logic necessary to actually mark downloadable a result that
+    has been found.
+
+    Returns a bool representing success.
+
+    result: SearchResult instance to be snatched.
+    endStatus: the episode status that should be used for the episode object once it's found on torrent provider.
+    """
+    # don't notify when we re-download an episode
+    for curEpObj in result.episodes:
+        if curEpObj.status != endStatus:
+            with curEpObj.lock:
+                curEpObj.status = endStatus
+                curEpObj.saveToDB()
+
+            notifiers.notify_downloadable(curEpObj._format_pattern('%SN - %Sx%0E - %EN'))
 
     return True
 
@@ -195,10 +218,6 @@ def searchForNeededEpisodes():
 
         # pick a single result for each episode, respecting existing results
         for curEp in curFoundResults:
-
-            if curEp.show.paused:
-                logger.log(u"Show " + curEp.show.name + " is paused, ignoring all RSS items for " + curEp.prettyName(), logger.DEBUG)
-                continue
 
             # find the best result for the current episode
             bestResult = None
@@ -271,7 +290,7 @@ def pickBestResult(results, show, quality_list=None):
             bestResult = cur_result
 
         elif bestResult.quality == cur_result.quality:
-            if "proper" in cur_result.name.lower() or "repack" in cur_result.name.lower():
+            if ("proper" not in bestResult.name.lower() and "repack" not in bestResult.name.lower()) and ("proper" in cur_result.name.lower() or "repack" in cur_result.name.lower()):
                 bestResult = cur_result
             elif "internal" in bestResult.name.lower() and "internal" not in cur_result.name.lower():
                 bestResult = cur_result
@@ -371,7 +390,7 @@ def findEpisode(episode, manualSearch=False):
 
     return bestResult
 
-def findSeason(show, season):
+def findSeason(show, season, type="wantEP"):
 
     logger.log(u"Searching for stuff we need from " + show.name + " season " + str(season))
 
@@ -385,7 +404,14 @@ def findSeason(show, season):
             continue
 
         try:
-            curResults = curProvider.findSeasonResults(show, season)
+
+            if type == "wantEP":
+                curResults = curProvider.findSeasonResults(show, season)
+            elif type == "skipEp":
+                curResults = curProvider.findSeasonResultsDownloadable(show, season)
+	    else:
+		logger.log(u"Invalid provider name - this is a coding error, report it please", logger.ERROR)
+		return None
 
             # make a list of all the results for this provider
             for curEp in curResults:
@@ -441,16 +467,27 @@ def findSeason(show, season):
 
         allWanted = True
         anyWanted = False
-        for curEpNum in allEps:
-            if not show.wantEpisode(season, curEpNum, seasonQual):
-                allWanted = False
-            else:
-                anyWanted = True
 
-        # if we need every ep in the season and there's nothing better then just download this and be done with it
-        if allWanted and bestSeasonNZB.quality == highest_quality_overall:
+        if type == "wantEP":
+            for curEpNum in allEps:
+                if not show.wantEpisode(season, curEpNum, seasonQual):
+                    allWanted = False
+                else:
+                    anyWanted = True
+        elif type == "skipEp":
+            for curEpNum in allEps:
+                if not show.lookIfDownloadable(season, curEpNum, seasonQual):
+                    allWanted = False
+                else:
+                    anyWanted = True
+
+	# if we need every ep in the season check if single episode releases should be preferred over season releases (missing single episode releases will be picked individually from season release)
+	preferSingleEpisodesOverSeasonReleases = sickbeard.PREFER_EPISODE_RELEASES
+	logger.log(u"Prefer single episodes over season releases: "+str(preferSingleEpisodesOverSeasonReleases), logger.DEBUG)
+
+	# if we need every ep in the season and there's nothing better then just download this and be done with it (unless single episodes are preferred)
+	if allWanted and bestSeasonNZB.quality == highest_quality_overall and not preferSingleEpisodesOverSeasonReleases:
             logger.log(u"Every ep in this season is needed, downloading the whole " + bestSeasonNZB.provider.providerType + " " + bestSeasonNZB.name)
-
             epObjs = []
             for curEpNum in allEps:
                 epObjs.append(show.getEpisode(season, curEpNum))

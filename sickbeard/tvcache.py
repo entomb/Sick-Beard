@@ -380,41 +380,51 @@ class TVCache():
             curSeason = int(curResult["season"])
             if curSeason == -1:
                 continue
-            curEp = curResult["episodes"].split("|")[1]
-            if not curEp:
+	    if sickbeard.TORRENT_METHOD == 'transmission':
+	    	if not episode:
+            		ListCurEp = curResult["episodes"].split("|")
+	    	else:
+            		ListCurEp = episode.episode
+	    else:
+		ListCurEp = curResult["episodes"].split("|")[1]
+
+            if not ListCurEp:
                 continue
-            curEp = int(curEp)
-            curQuality = int(curResult["quality"])
+            for curEp in ListCurEp:
+		if not curEp:
+			continue
+                curEp = int(curEp)
+                curQuality = int(curResult["quality"])
 
-            # if the show says we want that episode then add it to the list
-            if not showObj.wantEpisode(curSeason, curEp, curQuality, manualSearch):
-                logger.log(u"Skipping " + curResult["name"] + " because we don't want an episode that's " + Quality.qualityStrings[curQuality], logger.DEBUG)
+                # if the show says we want that episode then add it to the list
+                if not showObj.wantEpisode(curSeason, curEp, curQuality, manualSearch) and not showObj.lookIfDownloadable(curSeason, curEp, curQuality, manualSearch):
+                    logger.log(u"Skipping " + curResult["name"] + " because we don't want an episode that's " + Quality.qualityStrings[curQuality], logger.DEBUG)
 
-            else:
-
-                if episode:
-                    epObj = episode
                 else:
-                    epObj = showObj.getEpisode(curSeason, curEp)
 
-                # build a result object
-                title = curResult["name"]
-                url = curResult["url"]
+                    if episode:
+                        epObj = episode
+                    else:
+                        epObj = showObj.getEpisode(curSeason, curEp)
 
-                logger.log(u"Found result " + title + " at " + url)
+                    # build a result object
+                    title = curResult["name"]
+                    url = curResult["url"]
 
-                result = self.provider.getResult([epObj])
-                result.url = url
-                result.name = title
-                result.quality = curQuality
-                result.content = self.provider.getURL(url) \
+                    logger.log(u"Found result " + title + " at " + url)
+
+                    result = self.provider.getResult([epObj])
+                    result.url = url
+                    result.name = title
+                    result.quality = curQuality
+                    result.content = self.provider.getURL(url) \
                             if self.provider.providerType == sickbeard.providers.generic.GenericProvider.TORRENT \
                             and not url.startswith('magnet') else None
 
-                # add it to the list
-                if epObj not in neededEps:
-                    neededEps[epObj] = [result]
-                else:
-                    neededEps[epObj].append(result)
+                    # add it to the list
+                    if epObj not in neededEps:
+                        neededEps[epObj] = [result]
+                    else:
+                        neededEps[epObj].append(result)
 
         return neededEps

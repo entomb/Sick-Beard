@@ -50,7 +50,7 @@ from sickbeard import history
 from sickbeard import encodingKludge as ek
 
 from common import Quality, Overview, statusStrings
-from common import DOWNLOADED, SNATCHED, SNATCHED_PROPER, ARCHIVED, IGNORED, UNAIRED, WANTED, SKIPPED, UNKNOWN, FAILED
+from common import DOWNLOADED, SNATCHED, SNATCHED_PROPER, ARCHIVED, IGNORED, UNAIRED, WANTED, SKIPPED, DOWNLOADABLE, UNKNOWN, FAILED
 from common import NAMING_DUPLICATE, NAMING_EXTEND, NAMING_LIMITED_EXTEND, NAMING_SEPARATED_REPEAT, NAMING_LIMITED_EXTEND_E_PREFIXED
 
 
@@ -882,6 +882,12 @@ class TVShow(object):
         for cache_file in ek.ek(glob.glob, ek.ek(os.path.join, image_cache_dir, str(self.tvdbid) + '.*')):
             logger.log(u"Deleting cache file " + cache_file)
             os.remove(cache_file)
+            if sickbeard.TRAKT_REMOVE_SHOW_WATCHLIST and sickbeard.USE_TRAKT:
+                logger.log(u"Removing show: tvdb_id " + str(self.tvdbid) + ", Title " + str(self.name) + " from Watchlist", logger.DEBUG)
+                if sickbeard.traktWatchListCheckerSchedular.action.update_watchlist("show", "remove", self.tvdbid, 0, 0):
+                    sickbeard.traktWatchListCheckerSchedular.action.refreshShowWatchlist()
+                else:
+                    return False
 
     def populateCache(self):
         cache_inst = image_cache.ImageCache()
@@ -1035,8 +1041,8 @@ class TVShow(object):
 
         # if it's one of these then we want it as long as it's in our allowed initial qualities
         if quality in anyQualities + bestQualities:
-            if epStatus in (WANTED, UNAIRED, SKIPPED):
-                logger.log(u"Existing episode status is wanted/unaired/skipped, getting found episode", logger.DEBUG)
+            if epStatus in (WANTED, UNAIRED, SKIPPED, DOWNLOADABLE):
+                logger.log(u"Existing episode status is wanted/unaired/skipped/downloadable, getting found episode", logger.DEBUG)
                 return True
             elif manualSearch:
                 logger.log(u"Usually ignoring found episode, but forced search allows the quality, getting found episode", logger.DEBUG)
@@ -1056,10 +1062,53 @@ class TVShow(object):
         logger.log(u"None of the conditions were met, ignoring found episode", logger.DEBUG)
         return False
 
+    def lookIfDownloadable(self, season, episode, quality, manualSearch=False):
+
+        logger.log(u"Checking if is available episode " + str(season) + "x" + str(episode) + " at quality " + Quality.qualityStrings[quality], logger.DEBUG)
+
+        # if the quality isn't one we want under any circumstances then just say no
+        anyQualities, bestQualities = Quality.splitQuality(self.quality)
+        logger.log(u"any,best = " + str(anyQualities) + " " + str(bestQualities) + " and we are " + str(quality), logger.DEBUG)
+
+        if quality not in anyQualities + bestQualities:
+            logger.log(u"it's not available at this quality, ignoring found episode", logger.DEBUG)
+            return False
+
+        myDB = db.DBConnection()
+        sqlResults = myDB.select("SELECT status FROM tv_episodes WHERE showid = ? AND season = ? AND episode = ?", [self.tvdbid, season, episode])
+
+        if not sqlResults or not len(sqlResults):
+            logger.log(u"Unable to find a matching episode in database, ignoring found episode", logger.DEBUG)
+            return False
+
+        epStatus = int(sqlResults[0]["status"])
+        epStatus_text = statusStrings[epStatus]
+
+        logger.log(u"current episode status: " + str(epStatus), logger.DEBUG)
+
+        # if we know we don't want it then just say no
+        if epStatus in (IGNORED, ARCHIVED) and not manualSearch:
+            logger.log(u"Existing episode status: " + str(epStatus) + " (" + epStatus_text + ")", logger.DEBUG)
+            return False
+
+        # if it's one of these then we want it as long as it's in our allowed initial qualities
+        if quality in anyQualities + bestQualities:
+            if epStatus in (WANTED, UNAIRED, SKIPPED, FAILED):
+                logger.log(u"Existing episode status is wanted/unaired/skipped, definitely mark it downloadable", logger.DEBUG)
+                return True
+            elif manualSearch:
+                logger.log(u"Usually ignoring found episode, but forced search allows the quality, getting found episode", logger.DEBUG)
+                return True
+
+        logger.log(u"None of the conditions were met, ignoring found episode", logger.DEBUG)
+        return False
+
     def getOverview(self, epStatus):
 
         if epStatus == WANTED:
             return Overview.WANTED
+        elif epStatus == DOWNLOADABLE:
+            return Overview.DOWNLOADABLE
         elif epStatus in (UNAIRED, UNKNOWN):
             return Overview.UNAIRED
         elif epStatus in (SKIPPED, IGNORED):
@@ -1117,6 +1166,7 @@ class TVEpisode(object):
         self._file_size = 0
         self._release_name = ''
         self._is_proper = False
+        self._torrent_hash = ''
 
         # setting any of the above sets the dirty flag
         self.dirty = True
@@ -1148,6 +1198,7 @@ class TVEpisode(object):
     file_size = property(lambda self: self._file_size, dirty_setter("_file_size"))
     release_name = property(lambda self: self._release_name, dirty_setter("_release_name"))
     is_proper = property(lambda self: self._is_proper, dirty_setter("_is_proper"))
+    torrent_hash = property(lambda self: self._torrent_hash, dirty_setter("_torrent_hash"))
 
     def _set_location(self, new_location):
         logger.log(u"Setter sets location to " + new_location, logger.DEBUG)
@@ -1324,6 +1375,9 @@ class TVEpisode(object):
 
             if sqlResults[0]["is_proper"]:
                 self.is_proper = int(sqlResults[0]["is_proper"])
+
+            if sqlResults[0]["torrent_hash"]:
+                self.torrent_hash = sqlResults[0]["torrent_hash"]
 
             self.dirty = False
             return True
@@ -1610,7 +1664,8 @@ class TVEpisode(object):
                         "location": self.location,
                         "file_size": self.file_size,
                         "release_name": self.release_name,
-                        "is_proper": self.is_proper}
+                        "is_proper": self.is_proper,
+			"torrent_hash": self.torrent_hash}
         controlValueDict = {"showid": self.show.tvdbid,
                             "season": self.season,
                             "episode": self.episode}

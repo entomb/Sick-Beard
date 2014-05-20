@@ -1,7 +1,18 @@
 Sick Beard
 =====
 
-*SickBeard TPB  is currently an alpha release. There may be severe bugs in it and at any given time it may not work at all.*
+This fork is based on mr-orange ThePirateBay branch https://github.com/mr-orange/Sick-Beard
+
+Feature list of this branch:
+- Support for TNTVillage torrent provider
+- Language default to IT for new show/importing existing shows (if available on TVDB)
+- Automatic remove of downloaded torrent on trasmission client
+- Added search for file name in not dotted notation
+- trackt intregration enhancement: watched episode on show added on sickbeard are marked as Archived
+- trackt intregration enhancement: always have a numebr (configurable) of unwatched episode for not paused show
+- Chech availability of torrent file and mark episode to DOWNLOADABLE
+
+*SickBeard TPB is currently an alpha release. There may be severe bugs in it and at any given time it may not work at all.*
 
 Sick Beard TPB is a PVR for torrent and newsgroup users. It watches for new episodes of your favorite shows and when they are posted it downloads them, sorts and renames them, and optionally generates metadata for them. It retrieves show information from theTVDB.com and TVRage.com.
 

@@ -130,7 +130,7 @@ class ShowQueue(generic_queue.GenericQueue):
 
         return queueItemObj
 
-    def addShow(self, tvdb_id, showDir, default_status=None, quality=None, flatten_folders=None, subtitles=None, lang="en"):
+    def addShow(self, tvdb_id, showDir, default_status=None, quality=None, flatten_folders=None, subtitles=None, lang="it"):
         queueItemObj = QueueItemAdd(tvdb_id, showDir, default_status, quality, flatten_folders, lang, subtitles)
         
         self.add_item(queueItemObj)
@@ -269,7 +269,7 @@ class QueueItemAdd(ShowQueueItem):
             self.show.subtitles = self.subtitles if self.subtitles != None else sickbeard.SUBTITLES_DEFAULT
             self.show.quality = self.quality if self.quality else sickbeard.QUALITY_DEFAULT
             self.show.flatten_folders = self.flatten_folders if self.flatten_folders != None else sickbeard.FLATTEN_FOLDERS_DEFAULT
-            self.show.paused = False
+            self.show.paused = True
             
             # be smartish about this
             if self.show.genre and "talk show" in self.show.genre.lower():
@@ -348,6 +348,9 @@ class QueueItemAdd(ShowQueueItem):
         if self.default_status == WANTED:
             logger.log(u"Launching backlog for this show since its episodes are WANTED")
             sickbeard.backlogSearchScheduler.action.searchBacklog([self.show]) #@UndefinedVariable
+	elif self.default_status == SKIPPED:
+	    logger.log(u"Launching downloadable search for this show since its episodes are SKIPPED")
+            sickbeard.downloadableSearchScheduler.action.searchDownloadable([self.show]) #@UndefinedVariable
 
         self.show.writeMetadata()
         self.show.populateCache()    

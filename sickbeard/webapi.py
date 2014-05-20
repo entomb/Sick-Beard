@@ -34,7 +34,7 @@ from sickbeard import db, logger, exceptions, history, ui, helpers
 from sickbeard.exceptions import ex
 from sickbeard import encodingKludge as ek
 from sickbeard import search_queue
-from sickbeard.common import SNATCHED, SNATCHED_PROPER, DOWNLOADED, SKIPPED, UNAIRED, IGNORED, ARCHIVED, WANTED, UNKNOWN
+from sickbeard.common import SNATCHED, SNATCHED_PROPER, DOWNLOADED, DOWNLOADABLE, SKIPPED, UNAIRED, IGNORED, ARCHIVED, WANTED, UNKNOWN
 from common import Quality, qualityPresetStrings, statusStrings
 from sickbeard import image_cache
 from lib.tvdb_api import tvdb_api, tvdb_exceptions
@@ -595,6 +595,8 @@ def _replace_statusStrings_with_statusCodes(statusStrings):
         statusCodes += Quality.SNATCHED
     if "downloaded" in statusStrings:
         statusCodes += Quality.DOWNLOADED
+    if "downloadable" in statusStrings:
+        statusCodes.append(DOWNLOADABLE)
     if "skipped" in statusStrings:
         statusCodes.append(SKIPPED)
     if "wanted" in statusStrings:
@@ -1849,7 +1851,7 @@ class CMD_ShowAddNew(ApiCall):
         self.archive, args = self.check_params(args, kwargs, "archive", None, False, "list", ["sddvd", "hdtv", "rawhdtv", "fullhdtv", "hdwebdl", "fullhdwebdl", "hdbluray", "fullhdbluray"])
         self.flatten_folders, args = self.check_params(args, kwargs, "flatten_folders", str(sickbeard.FLATTEN_FOLDERS_DEFAULT), False, "bool", [])
         self.status, args = self.check_params(args, kwargs, "status", None, False, "string", ["wanted", "skipped", "archived", "ignored"])
-        self.lang, args = self.check_params(args, kwargs, "lang", "en", False, "string", self.valid_languages.keys())
+        self.lang, args = self.check_params(args, kwargs, "lang", "it", False, "string", self.valid_languages.keys())
         self.subtitles, args = self.check_params(args, kwargs, "subtitles", int(sickbeard.USE_SUBTITLES), False, "int", [])
         # super, missing, help
         ApiCall.__init__(self, args, kwargs)

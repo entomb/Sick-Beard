@@ -1,4 +1,4 @@
-# Author: Nic Wolfe <nic@wolfeden.ca>
+# aUthor: Nic Wolfe <nic@wolfeden.ca>
 # URL: http://code.google.com/p/sickbeard/
 #
 # This file is part of Sick Beard.
@@ -30,12 +30,12 @@ from threading import Lock
 
 # apparently py2exe won't build these unless they're imported somewhere
 from sickbeard import providers, metadata
-from providers import ezrss, tvtorrents, btn, newznab, womble, thepiratebay, torrentleech, kat, publichd, iptorrents, \
+from providers import ezrss, tvtorrents, tntvillage, btn, newznab, womble, thepiratebay, torrentleech, kat, publichd, iptorrents, \
      omgwtfnzbs, scc, hdtorrents, torrentday, hdbits, nextgen, speedcd, binsearch
 from sickbeard.config import CheckSection, check_setting_int, check_setting_str, ConfigMigrator
 
 
-from sickbeard import searchCurrent, searchBacklog, showUpdater, versionChecker, properFinder, autoPostProcesser, subtitles, traktWatchListChecker
+from sickbeard import searchCurrent, searchBacklog, searchDownloadable, showUpdater, versionChecker, properFinder, autoPostProcesser, subtitles, traktWatchListChecker
 from sickbeard import helpers, db, exceptions, show_queue, search_queue, scheduler
 from sickbeard import logger
 from sickbeard import naming
@@ -71,6 +71,7 @@ PIDFILE = ''
 DAEMON = None
 
 backlogSearchScheduler = None
+downloadableSearchScheduler = None
 currentSearchScheduler = None
 showUpdateScheduler = None
 versionCheckScheduler = None
@@ -162,10 +163,12 @@ USENET_RETENTION = None
 TORRENT_METHOD = None
 TORRENT_DIR = None
 DOWNLOAD_PROPERS = None
+PREFER_EPISODE_RELEASES = None
 ALLOW_HIGH_PRIORITY = None
 
 SEARCH_FREQUENCY = None
 BACKLOG_SEARCH_FREQUENCY = 21
+DOWNLOADABLE_SEARCH_FREQUENCY = 21
 
 MIN_SEARCH_FREQUENCY = 10
 
@@ -219,6 +222,16 @@ HDTORRENTS_USERNAME = None
 HDTORRENTS_PASSWORD = None
 HDTORRENTS_UID = None
 HDTORRENTS_HASH = None
+
+TNTVILLAGE = False
+TNTVILLAGE_USERNAME = None
+TNTVILLAGE_PASSWORD = None
+TNTVILLAGE_PAGE = None
+TNTVILLAGE_SUBTITLE = False
+TNTVILLAGE_CATEGORY = None
+TNTVILLAGE_UID = None
+TNTVILLAGE_HASH = None
+TNTVILLAGE_SESSION = None
 
 TORRENTDAY = None
 TORRENTDAY_USERNAME = None
@@ -288,6 +301,7 @@ TORRENT_LABEL = ''
 USE_XBMC = False
 XBMC_NOTIFY_ONSNATCH = False
 XBMC_NOTIFY_ONDOWNLOAD = False
+XBMC_NOTIFY_ONDOWNLOADABLE = False
 XBMC_NOTIFY_ONSUBTITLEDOWNLOAD = False
 XBMC_UPDATE_LIBRARY = False
 XBMC_UPDATE_FULL = False
@@ -299,6 +313,7 @@ XBMC_PASSWORD = None
 USE_PLEX = False
 PLEX_NOTIFY_ONSNATCH = False
 PLEX_NOTIFY_ONDOWNLOAD = False
+PLEX_NOTIFY_ONDOWNLOADABLE = False
 PLEX_NOTIFY_ONSUBTITLEDOWNLOAD = False
 PLEX_UPDATE_LIBRARY = False
 PLEX_SERVER_HOST = None
@@ -309,6 +324,7 @@ PLEX_PASSWORD = None
 USE_GROWL = False
 GROWL_NOTIFY_ONSNATCH = False
 GROWL_NOTIFY_ONDOWNLOAD = False
+GROWL_NOTIFY_ONDOWNLOADABLE = False
 GROWL_NOTIFY_ONSUBTITLEDOWNLOAD = False
 GROWL_HOST = ''
 GROWL_PASSWORD = None
@@ -316,6 +332,7 @@ GROWL_PASSWORD = None
 USE_PROWL = False
 PROWL_NOTIFY_ONSNATCH = False
 PROWL_NOTIFY_ONDOWNLOAD = False
+PROWL_NOTIFY_ONDOWNLOADABLE = False
 PROWL_NOTIFY_ONSUBTITLEDOWNLOAD = False
 PROWL_API = None
 PROWL_PRIORITY = 0
@@ -323,6 +340,7 @@ PROWL_PRIORITY = 0
 USE_TWITTER = False
 TWITTER_NOTIFY_ONSNATCH = False
 TWITTER_NOTIFY_ONDOWNLOAD = False
+TWITTER_NOTIFY_ONDOWNLOADABLE = False
 TWITTER_NOTIFY_ONSUBTITLEDOWNLOAD = False
 TWITTER_USERNAME = None
 TWITTER_PASSWORD = None
@@ -331,6 +349,7 @@ TWITTER_PREFIX = None
 USE_BOXCAR = False
 BOXCAR_NOTIFY_ONSNATCH = False
 BOXCAR_NOTIFY_ONDOWNLOAD = False
+BOXCAR_NOTIFY_ONDOWNLOADABLE = False
 BOXCAR_NOTIFY_ONSUBTITLEDOWNLOAD = False
 BOXCAR_USERNAME = None
 BOXCAR_PASSWORD = None
@@ -339,12 +358,14 @@ BOXCAR_PREFIX = None
 USE_PUSHOVER = False
 PUSHOVER_NOTIFY_ONSNATCH = False
 PUSHOVER_NOTIFY_ONDOWNLOAD = False
+PUSHOVER_NOTIFY_ONDOWNLOADABLE = False
 PUSHOVER_NOTIFY_ONSUBTITLEDOWNLOAD = False
 PUSHOVER_USERKEY = None
 
 USE_LIBNOTIFY = False
 LIBNOTIFY_NOTIFY_ONSNATCH = False
 LIBNOTIFY_NOTIFY_ONDOWNLOAD = False
+LIBNOTIFY_NOTIFY_ONDOWNLOADABLE = False
 LIBNOTIFY_NOTIFY_ONSUBTITLEDOWNLOAD = False
 
 USE_NMJ = False
@@ -362,20 +383,24 @@ NMJv2_DBLOC = None
 USE_SYNOLOGYNOTIFIER = False
 SYNOLOGYNOTIFIER_NOTIFY_ONSNATCH = False
 SYNOLOGYNOTIFIER_NOTIFY_ONDOWNLOAD = False
+SYNOLOGYNOTIFIER_NOTIFY_ONDOWNLOADABLE = False
 SYNOLOGYNOTIFIER_NOTIFY_ONSUBTITLEDOWNLOAD = False
 
 USE_TRAKT = False
 TRAKT_USERNAME = None
 TRAKT_PASSWORD = None
 TRAKT_API = ''
+TRAKT_REMOVE_SHOW_WATCHLIST = False
 TRAKT_REMOVE_WATCHLIST = False
 TRAKT_USE_WATCHLIST = False
 TRAKT_METHOD_ADD = 0
 TRAKT_START_PAUSED = False
+TRAKT_NUM_EP = None
 
 USE_PYTIVO = False
 PYTIVO_NOTIFY_ONSNATCH = False
 PYTIVO_NOTIFY_ONDOWNLOAD = False
+PYTIVO_NOTIFY_ONDOWNLOADABLE = False
 PYTIVO_NOTIFY_ONSUBTITLEDOWNLOAD = False
 PYTIVO_UPDATE_LIBRARY = False
 PYTIVO_HOST = ''
@@ -385,6 +410,7 @@ PYTIVO_TIVO_NAME = ''
 USE_NMA = False
 NMA_NOTIFY_ONSNATCH = False
 NMA_NOTIFY_ONDOWNLOAD = False
+NMA_NOTIFY_ONDOWNLOADABLE = False
 NMA_NOTIFY_ONSUBTITLEDOWNLOAD = False
 NMA_API = None
 NMA_PRIORITY = 0
@@ -392,12 +418,14 @@ NMA_PRIORITY = 0
 USE_PUSHALOT = False
 PUSHALOT_NOTIFY_ONSNATCH = False
 PUSHALOT_NOTIFY_ONDOWNLOAD = False
+PUSHALOT_NOTIFY_ONDOWNLOADABLE = False
 PUSHALOT_NOTIFY_ONSUBTITLEDOWNLOAD = False
 PUSHALOT_AUTHORIZATIONTOKEN = None
 
 USE_PUSHBULLET = False
 PUSHBULLET_NOTIFY_ONSNATCH = False
 PUSHBULLET_NOTIFY_ONDOWNLOAD = False
+PUSHBULLET_NOTIFY_ONDOWNLOADABLE = False
 PUSHBULLET_NOTIFY_ONSUBTITLEDOWNLOAD = False
 PUSHBULLET_API = None
 PUSHBULLET_DEVICE = None
@@ -405,6 +433,7 @@ PUSHBULLET_DEVICE = None
 USE_EMAIL = False
 EMAIL_NOTIFY_ONSNATCH = False
 EMAIL_NOTIFY_ONDOWNLOAD = False
+EMAIL_NOTIFY_ONDOWNLOADABLE = False
 EMAIL_NOTIFY_ONSUBTITLEDOWNLOAD = False
 EMAIL_HOST = None
 EMAIL_PORT = 25
@@ -452,33 +481,38 @@ def get_backlog_cycle_time():
     cycletime = SEARCH_FREQUENCY*2+7
     return max([cycletime, 720])
 
+def get_downloadable_search_cycle_time():
+    cycletime = SEARCH_FREQUENCY*2+7
+    return max([cycletime, 720])
+
 def initialize(consoleLogging=True):
 
     with INIT_LOCK:
 
         global ACTUAL_LOG_DIR, LOG_DIR, WEB_PORT, WEB_LOG, ENCRYPTION_VERSION, WEB_ROOT, WEB_USERNAME, WEB_PASSWORD, WEB_HOST, WEB_IPV6, USE_API, API_KEY, ENABLE_HTTPS, HTTPS_CERT, HTTPS_KEY, \
-                USE_NZBS, USE_TORRENTS, NZB_METHOD, NZB_DIR, DOWNLOAD_PROPERS, ALLOW_HIGH_PRIORITY, TORRENT_METHOD, \
+                USE_NZBS, USE_TORRENTS, NZB_METHOD, NZB_DIR, DOWNLOAD_PROPERS, PREFER_EPISODE_RELEASES, ALLOW_HIGH_PRIORITY, TORRENT_METHOD, \
                 SAB_USERNAME, SAB_PASSWORD, SAB_APIKEY, SAB_CATEGORY, SAB_HOST, \
-                NZBGET_USERNAME, NZBGET_PASSWORD, NZBGET_CATEGORY, NZBGET_HOST, NZBGET_USE_HTTPS, currentSearchScheduler, backlogSearchScheduler, \
+                NZBGET_USERNAME, NZBGET_PASSWORD, NZBGET_CATEGORY, NZBGET_HOST, NZBGET_USE_HTTPS, currentSearchScheduler, backlogSearchScheduler, downloadableSearchScheduler, \
                 TORRENT_USERNAME, TORRENT_PASSWORD, TORRENT_HOST, TORRENT_PATH, TORRENT_RATIO, TORRENT_PAUSED, TORRENT_HIGH_BANDWIDTH, TORRENT_LABEL, \
-                USE_XBMC, XBMC_NOTIFY_ONSNATCH, XBMC_NOTIFY_ONDOWNLOAD, XBMC_NOTIFY_ONSUBTITLEDOWNLOAD, XBMC_UPDATE_FULL, XBMC_UPDATE_ONLYFIRST, \
+                USE_XBMC, XBMC_NOTIFY_ONSNATCH, XBMC_NOTIFY_ONDOWNLOAD, XBMC_NOTIFY_ONDOWNLOADABLE, XBMC_NOTIFY_ONSUBTITLEDOWNLOAD, XBMC_UPDATE_FULL, XBMC_UPDATE_ONLYFIRST, \
                 XBMC_UPDATE_LIBRARY, XBMC_HOST, XBMC_USERNAME, XBMC_PASSWORD, \
-                USE_TRAKT, TRAKT_USERNAME, TRAKT_PASSWORD, TRAKT_API, TRAKT_REMOVE_WATCHLIST, TRAKT_USE_WATCHLIST, TRAKT_METHOD_ADD, TRAKT_START_PAUSED, traktWatchListCheckerSchedular, \
-                USE_PLEX, PLEX_NOTIFY_ONSNATCH, PLEX_NOTIFY_ONDOWNLOAD, PLEX_NOTIFY_ONSUBTITLEDOWNLOAD, PLEX_UPDATE_LIBRARY, \
+                USE_TRAKT, TRAKT_USERNAME, TRAKT_PASSWORD, TRAKT_API, TRAKT_REMOVE_SHOW_WATCHLIST, TRAKT_REMOVE_WATCHLIST, TRAKT_USE_WATCHLIST, TRAKT_METHOD_ADD, TRAKT_START_PAUSED, TRAKT_NUM_EP, traktWatchListCheckerSchedular, \
+                USE_PLEX, PLEX_NOTIFY_ONSNATCH, PLEX_NOTIFY_ONDOWNLOAD, PLEX_NOTIFY_ONDOWNLOADABLE, PLEX_NOTIFY_ONSUBTITLEDOWNLOAD, PLEX_UPDATE_LIBRARY, \
                 PLEX_SERVER_HOST, PLEX_HOST, PLEX_USERNAME, PLEX_PASSWORD, \
                 showUpdateScheduler, __INITIALIZED__, LAUNCH_BROWSER, UPDATE_SHOWS_ON_START, SORT_ARTICLE, showList, loadingShowList, \
                 NEWZNAB_DATA, NZBS, NZBS_UID, NZBS_HASH, EZRSS, TVTORRENTS, TVTORRENTS_DIGEST, TVTORRENTS_HASH, TVTORRENTS_OPTIONS, BTN, BTN_API_KEY, BTN_OPTIONS, \
                 THEPIRATEBAY, THEPIRATEBAY_TRUSTED, THEPIRATEBAY_PROXY, THEPIRATEBAY_PROXY_URL, THEPIRATEBAY_BLACKLIST, THEPIRATEBAY_OPTIONS, TORRENTLEECH, TORRENTLEECH_USERNAME, TORRENTLEECH_PASSWORD, TORRENTLEECH_OPTIONS, \
                 IPTORRENTS, IPTORRENTS_USERNAME, IPTORRENTS_PASSWORD, IPTORRENTS_FREELEECH, IPTORRENTS_OPTIONS, KAT, KAT_VERIFIED, KAT_OPTIONS, PUBLICHD, PUBLICHD_OPTIONS, SCC, SCC_USERNAME, SCC_PASSWORD, SCC_OPTIONS, HDTORRENTS, HDTORRENTS_USERNAME, HDTORRENTS_PASSWORD, HDTORRENTS_UID, HDTORRENTS_HASH, HDTORRENTS_OPTIONS, TORRENTDAY, TORRENTDAY_USERNAME, TORRENTDAY_PASSWORD, TORRENTDAY_UID, TORRENTDAY_HASH, TORRENTDAY_FREELEECH, TORRENTDAY_OPTIONS, \
-                HDBITS, HDBITS_USERNAME, HDBITS_PASSKEY, HDBITS_OPTIONS, TORRENT_DIR, USENET_RETENTION, SOCKET_TIMEOUT, SEARCH_FREQUENCY, DEFAULT_SEARCH_FREQUENCY, BACKLOG_SEARCH_FREQUENCY, \
+		HDBITS, HDBITS_USERNAME, HDBITS_PASSKEY, HDBITS_OPTIONS, TORRENT_DIR, USENET_RETENTION, SOCKET_TIMEOUT, SEARCH_FREQUENCY, DEFAULT_SEARCH_FREQUENCY, BACKLOG_SEARCH_FREQUENCY, DOWNLOADABLE_SEARCH_FREQUENCY, \
+                TNTVILLAGE, TNTVILLAGE_USERNAME, TNTVILLAGE_PASSWORD, TNTVILLAGE_PAGE, TNTVILLAGE_SUBTITLE, TNTVILLAGE_CATEGORY, TNTVILLAGE_UID, TNTVILLAGE_HASH, TNTVILLAGE_SESSION, TNTVILLAGE_OPTIONS, \
                 NEXTGEN, NEXTGEN_USERNAME, NEXTGEN_PASSWORD, NEXTGEN_FREELEECH, NEXTGEN_OPTIONS, SPEEDCD, SPEEDCD_USERNAME, SPEEDCD_PASSWORD, SPEEDCD_FREELEECH, BINSEARCH, BINSEARCH_MAX, BINSEARCH_ALT, \
 				QUALITY_DEFAULT, FLATTEN_FOLDERS_DEFAULT, SUBTITLES_DEFAULT, STATUS_DEFAULT, \
-                GROWL_NOTIFY_ONSNATCH, GROWL_NOTIFY_ONDOWNLOAD, GROWL_NOTIFY_ONSUBTITLEDOWNLOAD, TWITTER_NOTIFY_ONSNATCH, TWITTER_NOTIFY_ONDOWNLOAD, TWITTER_NOTIFY_ONSUBTITLEDOWNLOAD, \
-                USE_GROWL, GROWL_HOST, GROWL_PASSWORD, USE_PROWL, PROWL_NOTIFY_ONSNATCH, PROWL_NOTIFY_ONDOWNLOAD, PROWL_NOTIFY_ONSUBTITLEDOWNLOAD, PROWL_API, PROWL_PRIORITY, PROG_DIR, \
-                USE_PYTIVO, PYTIVO_NOTIFY_ONSNATCH, PYTIVO_NOTIFY_ONDOWNLOAD, PYTIVO_NOTIFY_ONSUBTITLEDOWNLOAD, PYTIVO_UPDATE_LIBRARY, PYTIVO_HOST, PYTIVO_SHARE_NAME, PYTIVO_TIVO_NAME, \
-                USE_NMA, NMA_NOTIFY_ONSNATCH, NMA_NOTIFY_ONDOWNLOAD, NMA_NOTIFY_ONSUBTITLEDOWNLOAD, NMA_API, NMA_PRIORITY, \
-                USE_PUSHALOT, PUSHALOT_NOTIFY_ONSNATCH, PUSHALOT_NOTIFY_ONDOWNLOAD, PUSHALOT_NOTIFY_ONSUBTITLEDOWNLOAD, PUSHALOT_AUTHORIZATIONTOKEN, \
-                USE_PUSHBULLET, PUSHBULLET_NOTIFY_ONSNATCH, PUSHBULLET_NOTIFY_ONDOWNLOAD, PUSHBULLET_NOTIFY_ONSUBTITLEDOWNLOAD, PUSHBULLET_API, PUSHBULLET_DEVICE, \
+                GROWL_NOTIFY_ONSNATCH, GROWL_NOTIFY_ONDOWNLOAD, GROWL_NOTIFY_ONDOWNLOADABLE, GROWL_NOTIFY_ONSUBTITLEDOWNLOAD, TWITTER_NOTIFY_ONSNATCH, TWITTER_NOTIFY_ONDOWNLOAD, TWITTER_NOTIFY_ONDOWNLOADABLE, TWITTER_NOTIFY_ONSUBTITLEDOWNLOAD, \
+                USE_GROWL, GROWL_HOST, GROWL_PASSWORD, USE_PROWL, PROWL_NOTIFY_ONSNATCH, PROWL_NOTIFY_ONDOWNLOAD, PROWL_NOTIFY_ONDOWNLOADABLE, PROWL_NOTIFY_ONSUBTITLEDOWNLOAD, PROWL_API, PROWL_PRIORITY, PROG_DIR, \
+                USE_PYTIVO, PYTIVO_NOTIFY_ONSNATCH, PYTIVO_NOTIFY_ONDOWNLOAD, PYTIVO_NOTIFY_ONDOWNLOADABLE, PYTIVO_NOTIFY_ONSUBTITLEDOWNLOAD, PYTIVO_UPDATE_LIBRARY, PYTIVO_HOST, PYTIVO_SHARE_NAME, PYTIVO_TIVO_NAME, \
+                USE_NMA, NMA_NOTIFY_ONSNATCH, NMA_NOTIFY_ONDOWNLOAD, NMA_NOTIFY_ONDOWNLOADABLE, NMA_NOTIFY_ONSUBTITLEDOWNLOAD, NMA_API, NMA_PRIORITY, \
+                USE_PUSHALOT, PUSHALOT_NOTIFY_ONSNATCH, PUSHALOT_NOTIFY_ONDOWNLOAD, PUSHALOT_NOTIFY_ONDOWNLOADABLE, PUSHALOT_NOTIFY_ONSUBTITLEDOWNLOAD, PUSHALOT_AUTHORIZATIONTOKEN, \
+                USE_PUSHBULLET, PUSHBULLET_NOTIFY_ONSNATCH, PUSHBULLET_NOTIFY_ONDOWNLOAD, PUSHBULLET_NOTIFY_ONDOWNLOADABLE, PUSHBULLET_NOTIFY_ONSUBTITLEDOWNLOAD, PUSHBULLET_API, PUSHBULLET_DEVICE, \
                 versionCheckScheduler, VERSION_NOTIFY, PROCESS_AUTOMATICALLY, UNPACK, \
                 KEEP_PROCESSED_DIR, PROCESS_METHOD, TV_DOWNLOAD_DIR, TVDB_BASE_URL, MIN_SEARCH_FREQUENCY, \
                 showQueueScheduler, searchQueueScheduler, ROOT_DIRS, CACHE_DIR, ACTUAL_CACHE_DIR, TVDB_API_PARMS, \
@@ -486,11 +520,11 @@ def initialize(consoleLogging=True):
                 RENAME_EPISODES, properFinderScheduler, PROVIDER_ORDER, autoPostProcesserScheduler, \
                 WOMBLE, OMGWTFNZBS, OMGWTFNZBS_USERNAME, OMGWTFNZBS_APIKEY, providerList, newznabProviderList, torrentRssProviderList,\
                 EXTRA_SCRIPTS, USE_TWITTER, TWITTER_USERNAME, TWITTER_PASSWORD, TWITTER_PREFIX, \
-                USE_BOXCAR, BOXCAR_USERNAME, BOXCAR_PASSWORD, BOXCAR_NOTIFY_ONDOWNLOAD, BOXCAR_NOTIFY_ONSUBTITLEDOWNLOAD, BOXCAR_NOTIFY_ONSNATCH, \
-                USE_PUSHOVER, PUSHOVER_USERKEY, PUSHOVER_NOTIFY_ONDOWNLOAD, PUSHOVER_NOTIFY_ONSUBTITLEDOWNLOAD, PUSHOVER_NOTIFY_ONSNATCH, \
-                USE_LIBNOTIFY, LIBNOTIFY_NOTIFY_ONSNATCH, LIBNOTIFY_NOTIFY_ONDOWNLOAD, LIBNOTIFY_NOTIFY_ONSUBTITLEDOWNLOAD, USE_NMJ, NMJ_HOST, NMJ_DATABASE, NMJ_MOUNT, USE_NMJv2, NMJv2_HOST, NMJv2_DATABASE, NMJv2_DBLOC, USE_SYNOINDEX, \
-                USE_SYNOLOGYNOTIFIER, SYNOLOGYNOTIFIER_NOTIFY_ONSNATCH, SYNOLOGYNOTIFIER_NOTIFY_ONDOWNLOAD, SYNOLOGYNOTIFIER_NOTIFY_ONSUBTITLEDOWNLOAD, \
-                USE_EMAIL, EMAIL_HOST, EMAIL_PORT, EMAIL_TLS, EMAIL_USER, EMAIL_PASSWORD, EMAIL_FROM, EMAIL_NOTIFY_ONSNATCH, EMAIL_NOTIFY_ONDOWNLOAD, EMAIL_NOTIFY_ONSUBTITLEDOWNLOAD, EMAIL_LIST, \
+                USE_BOXCAR, BOXCAR_USERNAME, BOXCAR_PASSWORD, BOXCAR_NOTIFY_ONDOWNLOAD, BOXCAR_NOTIFY_ONDOWNLOADABLE, BOXCAR_NOTIFY_ONSUBTITLEDOWNLOAD, BOXCAR_NOTIFY_ONSNATCH, \
+                USE_PUSHOVER, PUSHOVER_USERKEY, PUSHOVER_NOTIFY_ONDOWNLOAD, PUSHOVER_NOTIFY_ONDOWNLOADABLE, PUSHOVER_NOTIFY_ONSUBTITLEDOWNLOAD, PUSHOVER_NOTIFY_ONSNATCH, \
+                USE_LIBNOTIFY, LIBNOTIFY_NOTIFY_ONSNATCH, LIBNOTIFY_NOTIFY_ONDOWNLOAD, LIBNOTIFY_NOTIFY_ONDOWNLOADABLE, LIBNOTIFY_NOTIFY_ONSUBTITLEDOWNLOAD, USE_NMJ, NMJ_HOST, NMJ_DATABASE, NMJ_MOUNT, USE_NMJv2, NMJv2_HOST, NMJv2_DATABASE, NMJv2_DBLOC, USE_SYNOINDEX, \
+                USE_SYNOLOGYNOTIFIER, SYNOLOGYNOTIFIER_NOTIFY_ONSNATCH, SYNOLOGYNOTIFIER_NOTIFY_ONDOWNLOAD, SYNOLOGYNOTIFIER_NOTIFY_ONDOWNLOADABLE, SYNOLOGYNOTIFIER_NOTIFY_ONSUBTITLEDOWNLOAD, \
+                USE_EMAIL, EMAIL_HOST, EMAIL_PORT, EMAIL_TLS, EMAIL_USER, EMAIL_PASSWORD, EMAIL_FROM, EMAIL_NOTIFY_ONSNATCH, EMAIL_NOTIFY_ONDOWNLOAD, EMAIL_NOTIFY_ONDOWNLOADABLE, EMAIL_NOTIFY_ONSUBTITLEDOWNLOAD, EMAIL_LIST, \
                 USE_LISTVIEW, METADATA_XBMC, METADATA_XBMC_12PLUS, METADATA_MEDIABROWSER, METADATA_PS3, metadata_provider_dict, \
                 NEWZBIN, NEWZBIN_USERNAME, NEWZBIN_PASSWORD, GIT_PATH, MOVE_ASSOCIATED_FILES, \
                 GUI_NAME, HOME_LAYOUT, HISTORY_LAYOUT, DISPLAY_SHOW_SPECIALS, COMING_EPS_LAYOUT, COMING_EPS_SORT, COMING_EPS_DISPLAY_PAUSED, COMING_EPS_MISSED_RANGE, DATE_PRESET, TIME_PRESET, TIME_PRESET_W_SECONDS, \
@@ -623,6 +657,8 @@ def initialize(consoleLogging=True):
 
         DOWNLOAD_PROPERS = bool(check_setting_int(CFG, 'General', 'download_propers', 1))
 
+	PREFER_EPISODE_RELEASES = bool(check_setting_int(CFG, 'General', 'prefer_episode_releases', 0))
+
         ALLOW_HIGH_PRIORITY = bool(check_setting_int(CFG, 'General', 'allow_high_priority', 1))
 
         USENET_RETENTION = check_setting_int(CFG, 'General', 'usenet_retention', 500)
@@ -692,6 +728,14 @@ def initialize(consoleLogging=True):
         SCC_PASSWORD = check_setting_str(CFG, 'SCC', 'scc_password', '')
         SCC_OPTIONS = check_setting_str(CFG, 'SCC', 'scc_options', '')
 
+        TNTVILLAGE = bool(check_setting_int(CFG, 'TNTVILLAGE', 'tntvillage', 0))
+        TNTVILLAGE_USERNAME = check_setting_str(CFG, 'TNTVILLAGE', 'tntvillage_username', '')
+        TNTVILLAGE_PASSWORD = check_setting_str(CFG, 'TNTVILLAGE', 'tntvillage_password', '')
+        TNTVILLAGE_PAGE = check_setting_int(CFG, 'TNTVILLAGE', 'tntvillage_page', 5)
+        TNTVILLAGE_SUBTITLE = bool(check_setting_int(CFG, 'TNTVILLAGE', 'tntvillage_subtitle', 0))
+        TNTVILLAGE_CATEGORY = check_setting_int(CFG, 'TNTVILLAGE', 'tntvillage_category', 29)
+        TNTVILLAGE_OPTIONS = bool(check_setting_str(CFG, 'TNTVILLAGE', 'tntvillage_options', ''))
+
         HDTORRENTS = bool(check_setting_int(CFG, 'HDTORRENTS', 'hdtorrents', 0))
         HDTORRENTS_USERNAME = check_setting_str(CFG, 'HDTORRENTS', 'hdtorrents_username', '')
         HDTORRENTS_PASSWORD = check_setting_str(CFG, 'HDTORRENTS', 'hdtorrents_password', '')
@@ -755,6 +799,7 @@ def initialize(consoleLogging=True):
         USE_XBMC = bool(check_setting_int(CFG, 'XBMC', 'use_xbmc', 0))
         XBMC_NOTIFY_ONSNATCH = bool(check_setting_int(CFG, 'XBMC', 'xbmc_notify_onsnatch', 0))
         XBMC_NOTIFY_ONDOWNLOAD = bool(check_setting_int(CFG, 'XBMC', 'xbmc_notify_ondownload', 0))
+        XBMC_NOTIFY_ONDOWNLOADABLE = bool(check_setting_int(CFG, 'XBMC', 'xbmc_notify_ondownloadable', 0))
         XBMC_NOTIFY_ONSUBTITLEDOWNLOAD = bool(check_setting_int(CFG, 'XBMC', 'xbmc_notify_onsubtitledownload', 0))
         XBMC_UPDATE_LIBRARY = bool(check_setting_int(CFG, 'XBMC', 'xbmc_update_library', 0))
         XBMC_UPDATE_FULL = bool(check_setting_int(CFG, 'XBMC', 'xbmc_update_full', 0))
@@ -766,6 +811,7 @@ def initialize(consoleLogging=True):
         USE_PLEX = bool(check_setting_int(CFG, 'Plex', 'use_plex', 0))
         PLEX_NOTIFY_ONSNATCH = bool(check_setting_int(CFG, 'Plex', 'plex_notify_onsnatch', 0))
         PLEX_NOTIFY_ONDOWNLOAD = bool(check_setting_int(CFG, 'Plex', 'plex_notify_ondownload', 0))
+        PLEX_NOTIFY_ONDOWNLOADABLE = bool(check_setting_int(CFG, 'Plex', 'plex_notify_ondownloadable', 0))
         PLEX_NOTIFY_ONSUBTITLEDOWNLOAD = bool(check_setting_int(CFG, 'Plex', 'plex_notify_onsubtitledownload', 0))
         PLEX_UPDATE_LIBRARY = bool(check_setting_int(CFG, 'Plex', 'plex_update_library', 0))
         PLEX_SERVER_HOST = check_setting_str(CFG, 'Plex', 'plex_server_host', '')
@@ -776,6 +822,7 @@ def initialize(consoleLogging=True):
         USE_GROWL = bool(check_setting_int(CFG, 'Growl', 'use_growl', 0))
         GROWL_NOTIFY_ONSNATCH = bool(check_setting_int(CFG, 'Growl', 'growl_notify_onsnatch', 0))
         GROWL_NOTIFY_ONDOWNLOAD = bool(check_setting_int(CFG, 'Growl', 'growl_notify_ondownload', 0))
+        GROWL_NOTIFY_ONDOWNLOADABLE = bool(check_setting_int(CFG, 'Growl', 'growl_notify_ondownloadable', 0))
         GROWL_NOTIFY_ONSUBTITLEDOWNLOAD = bool(check_setting_int(CFG, 'Growl', 'growl_notify_onsubtitledownload', 0))
         GROWL_HOST = check_setting_str(CFG, 'Growl', 'growl_host', '')
         GROWL_PASSWORD = check_setting_str(CFG, 'Growl', 'growl_password', '')
@@ -783,6 +830,7 @@ def initialize(consoleLogging=True):
         USE_PROWL = bool(check_setting_int(CFG, 'Prowl', 'use_prowl', 0))
         PROWL_NOTIFY_ONSNATCH = bool(check_setting_int(CFG, 'Prowl', 'prowl_notify_onsnatch', 0))
         PROWL_NOTIFY_ONDOWNLOAD = bool(check_setting_int(CFG, 'Prowl', 'prowl_notify_ondownload', 0))
+        PROWL_NOTIFY_ONDOWNLOADABLE = bool(check_setting_int(CFG, 'Prowl', 'prowl_notify_ondownloadable', 0))
         PROWL_NOTIFY_ONSUBTITLEDOWNLOAD = bool(check_setting_int(CFG, 'Prowl', 'prowl_notify_onsubtitledownload', 0))
         PROWL_API = check_setting_str(CFG, 'Prowl', 'prowl_api', '')
         PROWL_PRIORITY = check_setting_str(CFG, 'Prowl', 'prowl_priority', "0")
@@ -790,6 +838,7 @@ def initialize(consoleLogging=True):
         USE_TWITTER = bool(check_setting_int(CFG, 'Twitter', 'use_twitter', 0))
         TWITTER_NOTIFY_ONSNATCH = bool(check_setting_int(CFG, 'Twitter', 'twitter_notify_onsnatch', 0))
         TWITTER_NOTIFY_ONDOWNLOAD = bool(check_setting_int(CFG, 'Twitter', 'twitter_notify_ondownload', 0))
+        TWITTER_NOTIFY_ONDOWNLOADABLE = bool(check_setting_int(CFG, 'Twitter', 'twitter_notify_ondownloadable', 0))
         TWITTER_NOTIFY_ONSUBTITLEDOWNLOAD = bool(check_setting_int(CFG, 'Twitter', 'twitter_notify_onsubtitledownload', 0))
         TWITTER_USERNAME = check_setting_str(CFG, 'Twitter', 'twitter_username', '')
         TWITTER_PASSWORD = check_setting_str(CFG, 'Twitter', 'twitter_password', '')
@@ -798,18 +847,21 @@ def initialize(consoleLogging=True):
         USE_BOXCAR = bool(check_setting_int(CFG, 'Boxcar', 'use_boxcar', 0))
         BOXCAR_NOTIFY_ONSNATCH = bool(check_setting_int(CFG, 'Boxcar', 'boxcar_notify_onsnatch', 0))
         BOXCAR_NOTIFY_ONDOWNLOAD = bool(check_setting_int(CFG, 'Boxcar', 'boxcar_notify_ondownload', 0))
+        BOXCAR_NOTIFY_ONDOWNLOADABLE = bool(check_setting_int(CFG, 'Boxcar', 'boxcar_notify_ondownloadable', 0))
         BOXCAR_NOTIFY_ONSUBTITLEDOWNLOAD = bool(check_setting_int(CFG, 'Boxcar', 'boxcar_notify_onsubtitledownload', 0))
         BOXCAR_USERNAME = check_setting_str(CFG, 'Boxcar', 'boxcar_username', '')
 
         USE_PUSHOVER = bool(check_setting_int(CFG, 'Pushover', 'use_pushover', 0))
         PUSHOVER_NOTIFY_ONSNATCH = bool(check_setting_int(CFG, 'Pushover', 'pushover_notify_onsnatch', 0))
         PUSHOVER_NOTIFY_ONDOWNLOAD = bool(check_setting_int(CFG, 'Pushover', 'pushover_notify_ondownload', 0))
+        PUSHOVER_NOTIFY_ONDOWNLOADABLE = bool(check_setting_int(CFG, 'Pushover', 'pushover_notify_ondownloadable', 0))
         PUSHOVER_NOTIFY_ONSUBTITLEDOWNLOAD = bool(check_setting_int(CFG, 'Pushover', 'pushover_notify_onsubtitledownload', 0))
         PUSHOVER_USERKEY = check_setting_str(CFG, 'Pushover', 'pushover_userkey', '')
 
         USE_LIBNOTIFY = bool(check_setting_int(CFG, 'Libnotify', 'use_libnotify', 0))
         LIBNOTIFY_NOTIFY_ONSNATCH = bool(check_setting_int(CFG, 'Libnotify', 'libnotify_notify_onsnatch', 0))
         LIBNOTIFY_NOTIFY_ONDOWNLOAD = bool(check_setting_int(CFG, 'Libnotify', 'libnotify_notify_ondownload', 0))
+        LIBNOTIFY_NOTIFY_ONDOWNLOADABLE = bool(check_setting_int(CFG, 'Libnotify', 'libnotify_notify_ondownloadable', 0))
         LIBNOTIFY_NOTIFY_ONSUBTITLEDOWNLOAD = bool(check_setting_int(CFG, 'Libnotify', 'libnotify_notify_onsubtitledownload', 0))
 
         USE_NMJ = bool(check_setting_int(CFG, 'NMJ', 'use_nmj', 0))
@@ -827,21 +879,25 @@ def initialize(consoleLogging=True):
         USE_SYNOLOGYNOTIFIER = bool(check_setting_int(CFG, 'SynologyNotifier', 'use_synologynotifier', 0))
         SYNOLOGYNOTIFIER_NOTIFY_ONSNATCH = bool(check_setting_int(CFG, 'SynologyNotifier', 'synologynotifier_notify_onsnatch', 0))
         SYNOLOGYNOTIFIER_NOTIFY_ONDOWNLOAD = bool(check_setting_int(CFG, 'SynologyNotifier', 'synologynotifier_notify_ondownload', 0))
+        SYNOLOGYNOTIFIER_NOTIFY_ONDOWNLOADABLE = bool(check_setting_int(CFG, 'SynologyNotifier', 'synologynotifier_notify_ondownloadable', 0))
         SYNOLOGYNOTIFIER_NOTIFY_ONSUBTITLEDOWNLOAD = bool(check_setting_int(CFG, 'SynologyNotifier', 'synologynotifier_notify_onsubtitledownload', 0))
 
         USE_TRAKT = bool(check_setting_int(CFG, 'Trakt', 'use_trakt', 0))
         TRAKT_USERNAME = check_setting_str(CFG, 'Trakt', 'trakt_username', '')
         TRAKT_PASSWORD = check_setting_str(CFG, 'Trakt', 'trakt_password', '')
         TRAKT_API = check_setting_str(CFG, 'Trakt', 'trakt_api', '')
+        TRAKT_REMOVE_SHOW_WATCHLIST = bool(check_setting_int(CFG, 'Trakt', 'trakt_remove_show_watchlist', 0))
         TRAKT_REMOVE_WATCHLIST = bool(check_setting_int(CFG, 'Trakt', 'trakt_remove_watchlist', 0))
         TRAKT_USE_WATCHLIST = bool(check_setting_int(CFG, 'Trakt', 'trakt_use_watchlist', 0))
         TRAKT_METHOD_ADD = check_setting_str(CFG, 'Trakt', 'trakt_method_add', "0")
         TRAKT_START_PAUSED = bool(check_setting_int(CFG, 'Trakt', 'trakt_start_paused', 0))
+        TRAKT_NUM_EP = check_setting_int(CFG, 'Trakt', 'trakt_num_ep', 0)
 
         CheckSection(CFG, 'pyTivo')
         USE_PYTIVO = bool(check_setting_int(CFG, 'pyTivo', 'use_pytivo', 0))
         PYTIVO_NOTIFY_ONSNATCH = bool(check_setting_int(CFG, 'pyTivo', 'pytivo_notify_onsnatch', 0))
         PYTIVO_NOTIFY_ONDOWNLOAD = bool(check_setting_int(CFG, 'pyTivo', 'pytivo_notify_ondownload', 0))
+        PYTIVO_NOTIFY_ONDOWNLOADABLE = bool(check_setting_int(CFG, 'pyTivo', 'pytivo_notify_ondownloadable', 0))
         PYTIVO_NOTIFY_ONSUBTITLEDOWNLOAD = bool(check_setting_int(CFG, 'pyTivo', 'pytivo_notify_onsubtitledownload', 0))
         PYTIVO_UPDATE_LIBRARY = bool(check_setting_int(CFG, 'pyTivo', 'pyTivo_update_library', 0))
         PYTIVO_HOST = check_setting_str(CFG, 'pyTivo', 'pytivo_host', '')
@@ -851,19 +907,22 @@ def initialize(consoleLogging=True):
         USE_NMA = bool(check_setting_int(CFG, 'NMA', 'use_nma', 0))
         NMA_NOTIFY_ONSNATCH = bool(check_setting_int(CFG, 'NMA', 'nma_notify_onsnatch', 0))
         NMA_NOTIFY_ONDOWNLOAD = bool(check_setting_int(CFG, 'NMA', 'nma_notify_ondownload', 0))
-        NMA_NOTIFY_ONSUBTITLEDOWNLOAD = bool(check_setting_int(CFG, 'NMA', 'nma_notify_onsubtitledownload', 0))
+        NMA_NOTIFY_ONDOWNLOADABLE = bool(check_setting_int(CFG, 'NMA', 'nma_notify_ondownload', 0))
+        NMA_NOTIFY_ONSUBTITLEDOWNLOAD = bool(check_setting_int(CFG, 'NMA', 'nma_notify_onsubtitledownloadable', 0))
         NMA_API = check_setting_str(CFG, 'NMA', 'nma_api', '')
         NMA_PRIORITY = check_setting_str(CFG, 'NMA', 'nma_priority', "0")
 
         USE_PUSHALOT = bool(check_setting_int(CFG, 'Pushalot', 'use_pushalot', 0))
         PUSHALOT_NOTIFY_ONSNATCH = bool(check_setting_int(CFG, 'Pushalot', 'pushalot_notify_onsnatch', 0))
         PUSHALOT_NOTIFY_ONDOWNLOAD = bool(check_setting_int(CFG, 'Pushalot', 'pushalot_notify_ondownload', 0))
+        PUSHALOT_NOTIFY_ONDOWNLOADABLE = bool(check_setting_int(CFG, 'Pushalot', 'pushalot_notify_ondownloadable', 0))
         PUSHALOT_NOTIFY_ONSUBTITLEDOWNLOAD = bool(check_setting_int(CFG, 'Pushalot', 'pushalot_notify_onsubtitledownload', 0))
         PUSHALOT_AUTHORIZATIONTOKEN = check_setting_str(CFG, 'Pushalot', 'pushalot_authorizationtoken', '')
 
         USE_PUSHBULLET = bool(check_setting_int(CFG, 'Pushbullet', 'use_pushbullet', 0))
         PUSHBULLET_NOTIFY_ONSNATCH = bool(check_setting_int(CFG, 'Pushbullet', 'pushbullet_notify_onsnatch', 0))
         PUSHBULLET_NOTIFY_ONDOWNLOAD = bool(check_setting_int(CFG, 'Pushbullet', 'pushbullet_notify_ondownload', 0))
+        PUSHBULLET_NOTIFY_ONDOWNLOADABLE = bool(check_setting_int(CFG, 'Pushbullet', 'pushbullet_notify_ondownloadable', 0))
         PUSHBULLET_NOTIFY_ONSUBTITLEDOWNLOAD = bool(check_setting_int(CFG, 'Pushbullet', 'pushbullet_notify_onsubtitledownload', 0))
         PUSHBULLET_API = check_setting_str(CFG, 'Pushbullet', 'pushbullet_api', '')
         PUSHBULLET_DEVICE = check_setting_str(CFG, 'Pushbullet', 'pushbullet_device', '')
@@ -871,6 +930,7 @@ def initialize(consoleLogging=True):
         USE_EMAIL = bool(check_setting_int(CFG, 'Email', 'use_email', 0))
         EMAIL_NOTIFY_ONSNATCH = bool(check_setting_int(CFG, 'Email', 'email_notify_onsnatch', 0))
         EMAIL_NOTIFY_ONDOWNLOAD = bool(check_setting_int(CFG, 'Email', 'email_notify_ondownload', 0))
+        EMAIL_NOTIFY_ONDOWNLOADABLE = bool(check_setting_int(CFG, 'Email', 'email_notify_ondownloadable', 0))
         EMAIL_NOTIFY_ONSUBTITLEDOWNLOAD = bool(check_setting_int(CFG, 'Email', 'email_notify_onsubtitledownload', 0))
         EMAIL_HOST = check_setting_str(CFG, 'Email', 'email_host', '')
         EMAIL_PORT = check_setting_int(CFG, 'Email', 'email_port', 25)
@@ -1033,6 +1093,11 @@ def initialize(consoleLogging=True):
                                                                       runImmediately=True)
         backlogSearchScheduler.action.cycleTime = BACKLOG_SEARCH_FREQUENCY
 
+        downloadableSearchScheduler = searchDownloadable.DownloadableSearchScheduler(searchDownloadable.DownloadableSearcher(),
+                                                                      cycleTime=datetime.timedelta(minutes=get_downloadable_search_cycle_time()),
+                                                                      threadName="DOWNLOADABLE_SEARCH",
+                                                                      runImmediately=False)
+        downloadableSearchScheduler.action.cycleTime = DOWNLOADABLE_SEARCH_FREQUENCY
 
         subtitlesFinderScheduler = scheduler.Scheduler(subtitles.SubtitlesFinder(),
                                                      cycleTime=datetime.timedelta(hours=SUBTITLES_FINDER_FREQUENCY),
@@ -1050,7 +1115,7 @@ def initialize(consoleLogging=True):
 
 def start():
 
-    global __INITIALIZED__, currentSearchScheduler, backlogSearchScheduler, \
+    global __INITIALIZED__, currentSearchScheduler, backlogSearchScheduler, downloadableSearchScheduler, \
             showUpdateScheduler, versionCheckScheduler, showQueueScheduler, \
             properFinderScheduler, autoPostProcesserScheduler, searchQueueScheduler, \
             subtitlesFinderScheduler, started, USE_SUBTITLES, \
@@ -1065,6 +1130,9 @@ def start():
 
             # start the backlog scheduler
             backlogSearchScheduler.thread.start()
+
+            # start the downloadable search scheduler
+            downloadableSearchScheduler.thread.start()
 
             # start the show updater
             showUpdateScheduler.thread.start()
@@ -1095,7 +1163,7 @@ def start():
 
 def halt ():
 
-    global __INITIALIZED__, currentSearchScheduler, backlogSearchScheduler, showUpdateScheduler, \
+    global __INITIALIZED__, currentSearchScheduler, backlogSearchScheduler, downloadableSearchScheduler, showUpdateScheduler, \
             showQueueScheduler, properFinderScheduler, autoPostProcesserScheduler, searchQueueScheduler, \
             subtitlesFinderScheduler, started, \
             traktWatchListCheckerSchedular
@@ -1119,6 +1187,13 @@ def halt ():
             logger.log(u"Waiting for the BACKLOG thread to exit")
             try:
                 backlogSearchScheduler.thread.join(10)
+            except:
+                pass
+
+            downloadableSearchScheduler.abort = True
+            logger.log(u"Waiting for the DOWNLOADABLE Search thread to exit")
+            try:
+                downloadableSearchScheduler.thread.join(10)
             except:
                 pass
 
@@ -1302,6 +1377,7 @@ def save_config():
     new_config['General']['usenet_retention'] = int(USENET_RETENTION)
     new_config['General']['search_frequency'] = int(SEARCH_FREQUENCY)
     new_config['General']['download_propers'] = int(DOWNLOAD_PROPERS)
+    new_config['General']['prefer_episode_releases'] = int(PREFER_EPISODE_RELEASES)
     new_config['General']['allow_high_priority'] = int(ALLOW_HIGH_PRIORITY)
     new_config['General']['quality_default'] = int(QUALITY_DEFAULT)
     new_config['General']['status_default'] = int(STATUS_DEFAULT)
@@ -1403,6 +1479,15 @@ def save_config():
     new_config['SCC']['scc_password'] = helpers.encrypt(SCC_PASSWORD, ENCRYPTION_VERSION)
     new_config['SCC']['scc_options'] = SCC_OPTIONS
 
+    new_config['TNTVILLAGE'] = {}
+    new_config['TNTVILLAGE']['tntvillage'] = int(TNTVILLAGE)
+    new_config['TNTVILLAGE']['tntvillage_username'] = TNTVILLAGE_USERNAME
+    new_config['TNTVILLAGE']['tntvillage_password'] = TNTVILLAGE_PASSWORD
+    new_config['TNTVILLAGE']['tntvillage_page'] = int(TNTVILLAGE_PAGE)
+    new_config['TNTVILLAGE']['tntvillage_subtitle'] = int(TNTVILLAGE_SUBTITLE)
+    new_config['TNTVILLAGE']['tntvillage_category'] = int(TNTVILLAGE_CATEGORY)
+    new_config['TNTVILLAGE']['tntvillage_options'] = TNTVILLAGE_OPTIONS
+
     new_config['HDTORRENTS'] = {}
     new_config['HDTORRENTS']['hdtorrents'] = int(HDTORRENTS)
     new_config['HDTORRENTS']['hdtorrents_username'] = HDTORRENTS_USERNAME
@@ -1480,6 +1565,7 @@ def save_config():
     new_config['XBMC']['use_xbmc'] = int(USE_XBMC)
     new_config['XBMC']['xbmc_notify_onsnatch'] = int(XBMC_NOTIFY_ONSNATCH)
     new_config['XBMC']['xbmc_notify_ondownload'] = int(XBMC_NOTIFY_ONDOWNLOAD)
+    new_config['XBMC']['xbmc_notify_ondownloadable'] = int(XBMC_NOTIFY_ONDOWNLOADABLE)
     new_config['XBMC']['xbmc_notify_onsubtitledownload'] = int(XBMC_NOTIFY_ONSUBTITLEDOWNLOAD)
     new_config['XBMC']['xbmc_update_library'] = int(XBMC_UPDATE_LIBRARY)
     new_config['XBMC']['xbmc_update_full'] = int(XBMC_UPDATE_FULL)
@@ -1492,6 +1578,7 @@ def save_config():
     new_config['Plex']['use_plex'] = int(USE_PLEX)
     new_config['Plex']['plex_notify_onsnatch'] = int(PLEX_NOTIFY_ONSNATCH)
     new_config['Plex']['plex_notify_ondownload'] = int(PLEX_NOTIFY_ONDOWNLOAD)
+    new_config['Plex']['plex_notify_ondownloadable'] = int(PLEX_NOTIFY_ONDOWNLOADABLE)
     new_config['Plex']['plex_notify_onsubtitledownload'] = int(PLEX_NOTIFY_ONSUBTITLEDOWNLOAD)
     new_config['Plex']['plex_update_library'] = int(PLEX_UPDATE_LIBRARY)
     new_config['Plex']['plex_server_host'] = PLEX_SERVER_HOST
@@ -1503,6 +1590,7 @@ def save_config():
     new_config['Growl']['use_growl'] = int(USE_GROWL)
     new_config['Growl']['growl_notify_onsnatch'] = int(GROWL_NOTIFY_ONSNATCH)
     new_config['Growl']['growl_notify_ondownload'] = int(GROWL_NOTIFY_ONDOWNLOAD)
+    new_config['Growl']['growl_notify_ondownloadable'] = int(GROWL_NOTIFY_ONDOWNLOADABLE)
     new_config['Growl']['growl_notify_onsubtitledownload'] = int(GROWL_NOTIFY_ONSUBTITLEDOWNLOAD)
     new_config['Growl']['growl_host'] = GROWL_HOST
     new_config['Growl']['growl_password'] = helpers.encrypt(GROWL_PASSWORD, ENCRYPTION_VERSION)
@@ -1511,6 +1599,7 @@ def save_config():
     new_config['Prowl']['use_prowl'] = int(USE_PROWL)
     new_config['Prowl']['prowl_notify_onsnatch'] = int(PROWL_NOTIFY_ONSNATCH)
     new_config['Prowl']['prowl_notify_ondownload'] = int(PROWL_NOTIFY_ONDOWNLOAD)
+    new_config['Prowl']['prowl_notify_ondownloadable'] = int(PROWL_NOTIFY_ONDOWNLOADABLE)
     new_config['Prowl']['prowl_notify_onsubtitledownload'] = int(PROWL_NOTIFY_ONSUBTITLEDOWNLOAD)
     new_config['Prowl']['prowl_api'] = PROWL_API
     new_config['Prowl']['prowl_priority'] = PROWL_PRIORITY
@@ -1519,6 +1608,7 @@ def save_config():
     new_config['Twitter']['use_twitter'] = int(USE_TWITTER)
     new_config['Twitter']['twitter_notify_onsnatch'] = int(TWITTER_NOTIFY_ONSNATCH)
     new_config['Twitter']['twitter_notify_ondownload'] = int(TWITTER_NOTIFY_ONDOWNLOAD)
+    new_config['Twitter']['twitter_notify_ondownloadable'] = int(TWITTER_NOTIFY_ONDOWNLOADABLE)
     new_config['Twitter']['twitter_notify_onsubtitledownload'] = int(TWITTER_NOTIFY_ONSUBTITLEDOWNLOAD)
     new_config['Twitter']['twitter_username'] = TWITTER_USERNAME
     new_config['Twitter']['twitter_password'] = helpers.encrypt(TWITTER_PASSWORD, ENCRYPTION_VERSION)
@@ -1528,6 +1618,7 @@ def save_config():
     new_config['Boxcar']['use_boxcar'] = int(USE_BOXCAR)
     new_config['Boxcar']['boxcar_notify_onsnatch'] = int(BOXCAR_NOTIFY_ONSNATCH)
     new_config['Boxcar']['boxcar_notify_ondownload'] = int(BOXCAR_NOTIFY_ONDOWNLOAD)
+    new_config['Boxcar']['boxcar_notify_ondownloadable'] = int(BOXCAR_NOTIFY_ONDOWNLOADABLE)
     new_config['Boxcar']['boxcar_notify_onsubtitledownload'] = int(BOXCAR_NOTIFY_ONSUBTITLEDOWNLOAD)
     new_config['Boxcar']['boxcar_username'] = BOXCAR_USERNAME
 
@@ -1535,6 +1626,7 @@ def save_config():
     new_config['Pushover']['use_pushover'] = int(USE_PUSHOVER)
     new_config['Pushover']['pushover_notify_onsnatch'] = int(PUSHOVER_NOTIFY_ONSNATCH)
     new_config['Pushover']['pushover_notify_ondownload'] = int(PUSHOVER_NOTIFY_ONDOWNLOAD)
+    new_config['Pushover']['pushover_notify_ondownloadable'] = int(PUSHOVER_NOTIFY_ONDOWNLOADABLE)
     new_config['Pushover']['pushover_notify_onsubtitledownload'] = int(PUSHOVER_NOTIFY_ONSUBTITLEDOWNLOAD)
     new_config['Pushover']['pushover_userkey'] = PUSHOVER_USERKEY
 
@@ -1542,6 +1634,7 @@ def save_config():
     new_config['Libnotify']['use_libnotify'] = int(USE_LIBNOTIFY)
     new_config['Libnotify']['libnotify_notify_onsnatch'] = int(LIBNOTIFY_NOTIFY_ONSNATCH)
     new_config['Libnotify']['libnotify_notify_ondownload'] = int(LIBNOTIFY_NOTIFY_ONDOWNLOAD)
+    new_config['Libnotify']['libnotify_notify_ondownloadable'] = int(LIBNOTIFY_NOTIFY_ONDOWNLOADABLE)
     new_config['Libnotify']['libnotify_notify_onsubtitledownload'] = int(LIBNOTIFY_NOTIFY_ONSUBTITLEDOWNLOAD)
 
     new_config['NMJ'] = {}
@@ -1563,6 +1656,7 @@ def save_config():
     new_config['SynologyNotifier']['use_synologynotifier'] = int(USE_SYNOLOGYNOTIFIER)
     new_config['SynologyNotifier']['synologynotifier_notify_onsnatch'] = int(SYNOLOGYNOTIFIER_NOTIFY_ONSNATCH)
     new_config['SynologyNotifier']['synologynotifier_notify_ondownload'] = int(SYNOLOGYNOTIFIER_NOTIFY_ONDOWNLOAD)
+    new_config['SynologyNotifier']['synologynotifier_notify_ondownloadable'] = int(SYNOLOGYNOTIFIER_NOTIFY_ONDOWNLOADABLE)
     new_config['SynologyNotifier']['synologynotifier_notify_onsubtitledownload'] = int(SYNOLOGYNOTIFIER_NOTIFY_ONSUBTITLEDOWNLOAD)
 
     new_config['Trakt'] = {}
@@ -1570,15 +1664,18 @@ def save_config():
     new_config['Trakt']['trakt_username'] = TRAKT_USERNAME
     new_config['Trakt']['trakt_password'] = helpers.encrypt(TRAKT_PASSWORD, ENCRYPTION_VERSION)
     new_config['Trakt']['trakt_api'] = TRAKT_API
+    new_config['Trakt']['trakt_remove_show_watchlist'] = int(TRAKT_REMOVE_SHOW_WATCHLIST)
     new_config['Trakt']['trakt_remove_watchlist'] = int(TRAKT_REMOVE_WATCHLIST)
     new_config['Trakt']['trakt_use_watchlist'] = int(TRAKT_USE_WATCHLIST)
     new_config['Trakt']['trakt_method_add'] = TRAKT_METHOD_ADD
     new_config['Trakt']['trakt_start_paused'] = int(TRAKT_START_PAUSED)
+    new_config['Trakt']['trakt_num_ep'] = int(TRAKT_NUM_EP)
 
     new_config['pyTivo'] = {}
     new_config['pyTivo']['use_pytivo'] = int(USE_PYTIVO)
     new_config['pyTivo']['pytivo_notify_onsnatch'] = int(PYTIVO_NOTIFY_ONSNATCH)
     new_config['pyTivo']['pytivo_notify_ondownload'] = int(PYTIVO_NOTIFY_ONDOWNLOAD)
+    new_config['pyTivo']['pytivo_notify_ondownloadable'] = int(PYTIVO_NOTIFY_ONDOWNLOADABLE)
     new_config['pyTivo']['pytivo_notify_onsubtitledownload'] = int(PYTIVO_NOTIFY_ONSUBTITLEDOWNLOAD)
     new_config['pyTivo']['pyTivo_update_library'] = int(PYTIVO_UPDATE_LIBRARY)
     new_config['pyTivo']['pytivo_host'] = PYTIVO_HOST
@@ -1589,6 +1686,7 @@ def save_config():
     new_config['NMA']['use_nma'] = int(USE_NMA)
     new_config['NMA']['nma_notify_onsnatch'] = int(NMA_NOTIFY_ONSNATCH)
     new_config['NMA']['nma_notify_ondownload'] = int(NMA_NOTIFY_ONDOWNLOAD)
+    new_config['NMA']['nma_notify_ondownloadable'] = int(NMA_NOTIFY_ONDOWNLOADABLE)
     new_config['NMA']['nma_notify_onsubtitledownload'] = int(NMA_NOTIFY_ONSUBTITLEDOWNLOAD)
     new_config['NMA']['nma_api'] = NMA_API
     new_config['NMA']['nma_priority'] = NMA_PRIORITY
@@ -1597,6 +1695,7 @@ def save_config():
     new_config['Pushalot']['use_pushalot'] = int(USE_PUSHALOT)
     new_config['Pushalot']['pushalot_notify_onsnatch'] = int(PUSHALOT_NOTIFY_ONSNATCH)
     new_config['Pushalot']['pushalot_notify_ondownload'] = int(PUSHALOT_NOTIFY_ONDOWNLOAD)
+    new_config['Pushalot']['pushalot_notify_ondownloadable'] = int(PUSHALOT_NOTIFY_ONDOWNLOADABLE)
     new_config['Pushalot']['pushalot_notify_onsubtitledownload'] = int(PUSHALOT_NOTIFY_ONSUBTITLEDOWNLOAD)
     new_config['Pushalot']['pushalot_authorizationtoken'] = PUSHALOT_AUTHORIZATIONTOKEN
 
@@ -1604,6 +1703,7 @@ def save_config():
     new_config['Pushbullet']['use_pushbullet'] = int(USE_PUSHBULLET)
     new_config['Pushbullet']['pushbullet_notify_onsnatch'] = int(PUSHBULLET_NOTIFY_ONSNATCH)
     new_config['Pushbullet']['pushbullet_notify_ondownload'] = int(PUSHBULLET_NOTIFY_ONDOWNLOAD)
+    new_config['Pushbullet']['pushbullet_notify_ondownloadable'] = int(PUSHBULLET_NOTIFY_ONDOWNLOADABLE)
     new_config['Pushbullet']['pushbullet_notify_onsubtitledownload'] = int(PUSHBULLET_NOTIFY_ONSUBTITLEDOWNLOAD)
     new_config['Pushbullet']['pushbullet_api'] = PUSHBULLET_API
     new_config['Pushbullet']['pushbullet_device'] = PUSHBULLET_DEVICE
@@ -1613,6 +1713,7 @@ def save_config():
     new_config['Email']['use_email'] = int(USE_EMAIL)
     new_config['Email']['email_notify_onsnatch'] = int(EMAIL_NOTIFY_ONSNATCH)
     new_config['Email']['email_notify_ondownload'] = int(EMAIL_NOTIFY_ONDOWNLOAD)
+    new_config['Email']['email_notify_ondownloadable'] = int(EMAIL_NOTIFY_ONDOWNLOADABLE)
     new_config['Email']['email_notify_onsubtitledownload'] = int(EMAIL_NOTIFY_ONSUBTITLEDOWNLOAD)
     new_config['Email']['email_host'] = EMAIL_HOST
     new_config['Email']['email_port'] = int(EMAIL_PORT)

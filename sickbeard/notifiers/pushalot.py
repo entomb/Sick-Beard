@@ -37,6 +37,10 @@ class PushalotNotifier:
         if sickbeard.PUSHALOT_NOTIFY_ONDOWNLOAD:
             self._sendPushalot(pushalot_authorizationtoken=None, event=common.notifyStrings[common.NOTIFY_DOWNLOAD], message=ep_name)
 
+    def notify_downloadable(self, ep_name):
+        if sickbeard.PUSHALOT_NOTIFY_ONDOWNLOADABLE:
+            self._sendPushalot(pushalot_authorizationtoken=None, event=common.notifyStrings[common.NOTIFY_DOWNLOADABLE], message=ep_name)
+
     def notify_subtitle_download(self, ep_name, lang):
         if sickbeard.PUSHALOT_NOTIFY_ONSUBTITLEDOWNLOAD:
             self._sendPushalot(pushalot_authorizationtoken=None, event=common.notifyStrings[common.NOTIFY_SUBTITLE_DOWNLOAD], message=ep_name + ": " + lang)

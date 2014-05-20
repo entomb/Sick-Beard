@@ -32,13 +32,13 @@
     <div class="stepDiv">
         #if $use_provided_info:
             Show retrieved from existing metadata: <a href="http://thetvdb.com/?tab=series&id=$provided_tvdb_id">$provided_tvdb_name</a>
-            <input type="hidden" name="tvdbLang" value="en" />
+            <input type="hidden" name="tvdbLang" value="it" />
             <input type="hidden" name="whichSeries" value="$provided_tvdb_id" />
             <input type="hidden" id="providedName" value="$provided_tvdb_name" />
         #else:
             <input type="text" id="nameToSearch" value="$default_show_name" style="margin-top: 1px;" />
             <select name="tvdbLang" id="tvdbLangSelect" style="height: 26px;margin-top: 1px;">
-                <option value="en" selected="selected">en</option>
+                <option value="it" selected="selected">it</option>
             </select><b>*</b>
             <input class="btn" type="button" id="searchName" value="Search" style="margin-top: -3px;" /><br /><br />
     

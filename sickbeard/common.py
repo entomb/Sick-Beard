@@ -41,11 +41,13 @@ SEASON_RESULT = -2
 NOTIFY_SNATCH = 1
 NOTIFY_DOWNLOAD = 2
 NOTIFY_SUBTITLE_DOWNLOAD = 3
+NOTIFY_DOWNLOADABLE = 4
 
 notifyStrings = {}
-notifyStrings[NOTIFY_SNATCH] = "Started Download"
+notifyStrings[NOTIFY_SNATCH] = "Download Started "
 notifyStrings[NOTIFY_DOWNLOAD] = "Download Finished"
-notifyStrings[NOTIFY_SUBTITLE_DOWNLOAD] = "Subtitle Download Finished"
+notifyStrings[NOTIFY_DOWNLOADABLE] = "Download Available"
+notifyStrings[NOTIFY_SUBTITLE_DOWNLOAD] = "Download Subtitle Finished"
 
 ### Episode statuses
 UNKNOWN = -1 # should never happen
@@ -59,6 +61,7 @@ IGNORED = 7 # episodes that you don't want included in your download stats
 SNATCHED_PROPER = 9 # qualified with quality
 SUBTITLED = 10 # qualified with quality
 FAILED = 11 #episode downloaded or snatched we don't want
+DOWNLOADABLE = 12 #episode available on torrent provider
 
 NAMING_REPEAT = 1
 NAMING_EXTEND = 2
@@ -104,7 +107,8 @@ class Quality:
 
     statusPrefixes = {DOWNLOADED: "Downloaded",
                       SNATCHED: "Snatched",
-                      FAILED: "Failed"}
+                      FAILED: "Failed",
+                      DOWNLOADABLE: "Downloadable"}
 
     @staticmethod
     def _getStatusStrings(status):
@@ -172,11 +176,11 @@ class Quality:
             return Quality.SDTV
         elif checkName(["(dvdrip|b[r|d]rip)(.ws)?.(xvid|divx|x264)"], any) and not checkName(["(720|1080)[pi]"], all):
             return Quality.SDDVD
-        elif checkName(["720p", "hdtv", "x264"], all) or checkName(["hr.ws.pdtv.x264"], any) and not checkName(["(1080)[pi]"], all):          
+        elif checkName(["720p", "hdtv", "x264"], all) or checkName(["hr.ws.pdtv.x264"], any) and not checkName(["(1080)[pi]"], all):
             return Quality.HDTV                                                                        
         elif checkName(["720p|1080i", "hdtv", "mpeg-?2"], all) or checkName(["1080i.hdtv", "h.?264"], all):
             return Quality.RAWHDTV                                                                     
-        elif checkName(["1080p", "hdtv", "x264"], all):         
+        elif checkName(["1080p", "hdtv", "x264"], all):
             return Quality.FULLHDTV                                                                    
         elif checkName(["720p", "web.dl", "h.?264"], all) or checkName(["720p", "itunes", "h.?264"], all):
             return Quality.HDWEBDL                                                                     
@@ -234,11 +238,13 @@ class Quality:
     DOWNLOADED = None
     SNATCHED = None
     SNATCHED_PROPER = None
+    DOWNLOADABLE = None
 
 Quality.DOWNLOADED = [Quality.compositeStatus(DOWNLOADED, x) for x in Quality.qualityStrings.keys()]
 Quality.SNATCHED = [Quality.compositeStatus(SNATCHED, x) for x in Quality.qualityStrings.keys()]
 Quality.SNATCHED_PROPER = [Quality.compositeStatus(SNATCHED_PROPER, x) for x in Quality.qualityStrings.keys()]
 Quality.FAILED = [Quality.compositeStatus(FAILED, x) for x in Quality.qualityStrings.keys()]
+Quality.DOWNLOADABLE = [Quality.compositeStatus(DOWNLOADABLE, x) for x in Quality.qualityStrings.keys()]
 
 SD = Quality.combineQualities([Quality.SDTV, Quality.SDDVD], [])                                                                                                                                          
 HD = Quality.combineQualities([Quality.HDTV, Quality.FULLHDTV, Quality.HDWEBDL, Quality.FULLHDWEBDL, Quality.HDBLURAY, Quality.FULLHDBLURAY], []) # HD720p + HD1080p                                      
@@ -268,10 +274,11 @@ class StatusStrings:
                               ARCHIVED: "Archived",
                               IGNORED: "Ignored",
                               SUBTITLED: "Subtitled",
-                              FAILED: "Failed"}
+                              FAILED: "Failed",
+			      DOWNLOADABLE: "Downloadable"}
 
     def __getitem__(self, name):
-        if name in Quality.DOWNLOADED + Quality.SNATCHED + Quality.SNATCHED_PROPER:
+        if name in Quality.DOWNLOADED + Quality.SNATCHED + Quality.SNATCHED_PROPER + Quality.DOWNLOADABLE:
             status, quality = Quality.splitCompositeStatus(name)
             if quality == Quality.NONE:
                 return self.statusStrings[status]
@@ -281,7 +288,7 @@ class StatusStrings:
             return self.statusStrings[name] if self.statusStrings.has_key(name) else ''
 
     def has_key(self, name):
-        return name in self.statusStrings or name in Quality.DOWNLOADED or name in Quality.SNATCHED or name in Quality.SNATCHED_PROPER
+        return name in self.statusStrings or name in Quality.DOWNLOADED or name in Quality.SNATCHED or name in Quality.SNATCHED_PROPER or name in Quality.DOWNLOADABLE
 
 statusStrings = StatusStrings()
 
@@ -291,6 +298,7 @@ class Overview:
     WANTED = WANTED # 3
     GOOD = 4
     SKIPPED = SKIPPED # 5
+    DOWNLOADABLE = DOWNLOADABLE # 12     
     
     # For both snatched statuses. Note: SNATCHED/QUAL have same value and break dict.
     SNATCHED = SNATCHED_PROPER # 9
@@ -300,7 +308,8 @@ class Overview:
                        QUAL: "qual",
                        GOOD: "good",
                        UNAIRED: "unaired",
-                       SNATCHED: "snatched"}
+                       SNATCHED: "snatched",
+                       DOWNLOADABLE: "downloadable"}
 
 # Get our xml namespaces correct for lxml
 XML_NSMAP = {'xsi': 'http://www.w3.org/2001/XMLSchema-instance',

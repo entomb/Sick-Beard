@@ -51,7 +51,7 @@ from sickbeard import network_timezones
 
 from sickbeard.providers import newznab, rsstorrent
 from sickbeard.common import Quality, Overview, statusStrings, qualityPresetStrings
-from sickbeard.common import SNATCHED, SKIPPED, UNAIRED, IGNORED, ARCHIVED, WANTED, FAILED
+from sickbeard.common import SNATCHED, SKIPPED, DOWNLOADABLE, UNAIRED, IGNORED, ARCHIVED, WANTED, FAILED
 from sickbeard.common import SD, HD720p, HD1080p
 from sickbeard.exceptions import ex
 from sickbeard.webapi import Api
@@ -478,6 +478,7 @@ class Manage:
             epCounts[Overview.GOOD] = 0
             epCounts[Overview.UNAIRED] = 0
             epCounts[Overview.SNATCHED] = 0
+            epCounts[Overview.DOWNLOADABLE] = 0
 
             sqlResults = myDB.select("SELECT * FROM tv_episodes WHERE showid = ? ORDER BY season DESC, episode DESC", [curShow.tvdbid])
 
@@ -1026,7 +1027,7 @@ class ConfigSearch:
     @cherrypy.expose
     def saveSearch(self, use_nzbs=None, use_torrents=None, nzb_dir=None, sab_username=None, sab_password=None,
                     sab_apikey=None, sab_category=None, sab_host=None, nzbget_username=None, nzbget_password=None, nzbget_category=None, nzbget_host=None, nzbget_use_https=None,
-                    nzb_method=None, torrent_method=None, usenet_retention=None, search_frequency=None, download_propers=None, allow_high_priority=None,
+                    nzb_method=None, torrent_method=None, usenet_retention=None, search_frequency=None, download_propers=None, prefer_episode_releases=None, allow_high_priority=None,
                     torrent_dir=None, torrent_username=None, torrent_password=None, torrent_host=None, torrent_label=None, torrent_path=None,
                     torrent_ratio=None, torrent_paused=None, torrent_high_bandwidth=None, ignore_words=None):
 
@@ -1055,6 +1056,7 @@ class ConfigSearch:
         else:
             sickbeard.properFinderScheduler.silent = True
 
+	sickbeard.PREFER_EPISODE_RELEASES = config.checkbox_to_value(prefer_episode_releases)
         sickbeard.ALLOW_HIGH_PRIORITY = config.checkbox_to_value(allow_high_priority)
 
         sickbeard.SAB_USERNAME = sab_username
@@ -1283,6 +1285,8 @@ class ConfigProviders:
             sickbeard.newznabProviderList.append(newProvider)
             return newProvider.getID() + '|' + newProvider.configStr()
 
+
+
     @cherrypy.expose
     def deleteNewznabProvider(self, nnid):
 
@@ -1364,6 +1368,7 @@ class ConfigProviders:
                       iptorrents_username=None, iptorrents_password=None, iptorrents_freeleech=None,
                       kat_trusted = None, kat_verified = None,
                       scc_username=None, scc_password=None,
+                      tntvillage_username=None, tntvillage_password=None,tntvillage_page=None,tntvillage_subtitle=None,tntvillage_category=None,
                       hdtorrents_username=None, hdtorrents_password=None,
                       torrentday_username=None, torrentday_password=None, torrentday_freeleech=None,
                       hdbits_username=None, hdbits_passkey=None,
@@ -1490,6 +1495,8 @@ class ConfigProviders:
                 sickbeard.PUBLICHD = curEnabled
             elif curProvider == 'sceneaccess':
                 sickbeard.SCC = curEnabled
+            elif curProvider == 'tntvillage':
+                sickbeard.TNTVILLAGE = curEnabled
             elif curProvider == 'hdtorrents':
                 sickbeard.HDTORRENTS = curEnabled
             elif curProvider == 'torrentday':
@@ -1529,12 +1536,16 @@ class ConfigProviders:
 
         sickbeard.IPTORRENTS_USERNAME = iptorrents_username.strip()
         sickbeard.IPTORRENTS_PASSWORD = iptorrents_password.strip()
-
         sickbeard.IPTORRENTS_FREELEECH = config.checkbox_to_value(iptorrents_freeleech)
 
         sickbeard.KAT_TRUSTED = config.checkbox_to_value(kat_trusted)
-
         sickbeard.KAT_VERIFIED = config.checkbox_to_value(kat_verified)
+
+        sickbeard.TNTVILLAGE_USERNAME = tntvillage_username.strip()
+        sickbeard.TNTVILLAGE_PASSWORD = tntvillage_password.strip()
+        sickbeard.TNTVILLAGE_PAGE = config.to_int(tntvillage_page)
+        sickbeard.TNTVILLAGE_SUBTITLE = config.checkbox_to_value(tntvillage_subtitle)
+        sickbeard.TNTVILLAGE_CATEGORY = config.to_int(tntvillage_category)
 
         sickbeard.TORRENTDAY_USERNAME = torrentday_username.strip()
         sickbeard.TORRENTDAY_PASSWORD = torrentday_password.strip()
@@ -1587,26 +1598,26 @@ class ConfigNotifications:
         return _munge(t)
 
     @cherrypy.expose
-    def saveNotifications(self, use_xbmc=None, xbmc_notify_onsnatch=None, xbmc_notify_ondownload=None, xbmc_notify_onsubtitledownload=None, xbmc_update_onlyfirst=None,
+    def saveNotifications(self, use_xbmc=None, xbmc_notify_onsnatch=None, xbmc_notify_ondownload=None, xbmc_notify_ondownloadable=None, xbmc_notify_onsubtitledownload=None, xbmc_update_onlyfirst=None,
                           xbmc_update_library=None, xbmc_update_full=None, xbmc_host=None, xbmc_username=None, xbmc_password=None,
-                          use_plex=None, plex_notify_onsnatch=None, plex_notify_ondownload=None, plex_notify_onsubtitledownload=None, plex_update_library=None,
+                          use_plex=None, plex_notify_onsnatch=None, plex_notify_ondownload=None, plex_notify_ondownloadable=None, plex_notify_onsubtitledownload=None, plex_update_library=None,
                           plex_server_host=None, plex_host=None, plex_username=None, plex_password=None,
-                          use_growl=None, growl_notify_onsnatch=None, growl_notify_ondownload=None, growl_notify_onsubtitledownload=None, growl_host=None, growl_password=None,
-                          use_prowl=None, prowl_notify_onsnatch=None, prowl_notify_ondownload=None, prowl_notify_onsubtitledownload=None, prowl_api=None, prowl_priority=0,
-                          use_twitter=None, twitter_notify_onsnatch=None, twitter_notify_ondownload=None, twitter_notify_onsubtitledownload=None,
-                          use_boxcar=None, boxcar_notify_onsnatch=None, boxcar_notify_ondownload=None, boxcar_notify_onsubtitledownload=None, boxcar_username=None,
-                          use_pushover=None, pushover_notify_onsnatch=None, pushover_notify_ondownload=None, pushover_notify_onsubtitledownload=None, pushover_userkey=None,
-                          use_libnotify=None, libnotify_notify_onsnatch=None, libnotify_notify_ondownload=None, libnotify_notify_onsubtitledownload=None,
+                          use_growl=None, growl_notify_onsnatch=None, growl_notify_ondownload=None, growl_notify_ondownloadable=None, growl_notify_onsubtitledownload=None, growl_host=None, growl_password=None,
+                          use_prowl=None, prowl_notify_onsnatch=None, prowl_notify_ondownload=None, prowl_notify_ondownloadable=None, prowl_notify_onsubtitledownload=None, prowl_api=None, prowl_priority=0,
+                          use_twitter=None, twitter_notify_onsnatch=None, twitter_notify_ondownload=None, twitter_notify_ondownloadable=None, twitter_notify_onsubtitledownload=None,
+                          use_boxcar=None, boxcar_notify_onsnatch=None, boxcar_notify_ondownload=None, boxcar_notify_ondownloadable=None, boxcar_notify_onsubtitledownload=None, boxcar_username=None,
+                          use_pushover=None, pushover_notify_onsnatch=None, pushover_notify_ondownload=None,  pushover_notify_ondownloadable=None, pushover_notify_onsubtitledownload=None, pushover_userkey=None,
+                          use_libnotify=None, libnotify_notify_onsnatch=None, libnotify_notify_ondownload=None, libnotify_notify_ondownloadable=None, libnotify_notify_onsubtitledownload=None,
                           use_nmj=None, nmj_host=None, nmj_database=None, nmj_mount=None, use_synoindex=None,
                           use_nmjv2=None, nmjv2_host=None, nmjv2_dbloc=None, nmjv2_database=None,
-                          use_trakt=None, trakt_username=None, trakt_password=None, trakt_api=None, trakt_remove_watchlist=None, trakt_use_watchlist=None, trakt_method_add=None, trakt_start_paused=None,
-                          use_synologynotifier=None, synologynotifier_notify_onsnatch=None, synologynotifier_notify_ondownload=None, synologynotifier_notify_onsubtitledownload=None,
-                          use_pytivo=None, pytivo_notify_onsnatch=None, pytivo_notify_ondownload=None, pytivo_notify_onsubtitledownload=None, pytivo_update_library=None,
+                          use_trakt=None, trakt_username=None, trakt_password=None, trakt_api=None, trakt_remove_watchlist=None, trakt_remove_show_watchlist=None, trakt_use_watchlist=None, trakt_method_add=None, trakt_start_paused=None, trakt_num_ep=None,
+                          use_synologynotifier=None, synologynotifier_notify_onsnatch=None, synologynotifier_notify_ondownload=None, synologynotifier_notify_ondownloadable=None, synologynotifier_notify_onsubtitledownload=None,
+                          use_pytivo=None, pytivo_notify_onsnatch=None, pytivo_notify_ondownload=None, pytivo_notify_ondownloadable=None, pytivo_notify_onsubtitledownload=None, pytivo_update_library=None,
                           pytivo_host=None, pytivo_share_name=None, pytivo_tivo_name=None,
-                          use_nma=None, nma_notify_onsnatch=None, nma_notify_ondownload=None, nma_notify_onsubtitledownload=None, nma_api=None, nma_priority=0,
-                          use_pushalot=None, pushalot_notify_onsnatch=None, pushalot_notify_ondownload=None, pushalot_notify_onsubtitledownload=None, pushalot_authorizationtoken=None,
-                          use_pushbullet=None, pushbullet_notify_onsnatch=None, pushbullet_notify_ondownload=None, pushbullet_notify_onsubtitledownload=None, pushbullet_api=None, pushbullet_device=None, pushbullet_device_list=None,          
-                          use_email=None, email_notify_onsnatch=None, email_notify_ondownload=None, email_notify_onsubtitledownload=None, email_host=None, email_port=25, email_from=None,
+                          use_nma=None, nma_notify_onsnatch=None, nma_notify_ondownload=None, nma_notify_ondownloadable=None, nma_notify_onsubtitledownload=None, nma_api=None, nma_priority=0,
+                          use_pushalot=None, pushalot_notify_onsnatch=None, pushalot_notify_ondownload=None, pushalot_notify_ondownloadable=None, pushalot_notify_onsubtitledownload=None, pushalot_authorizationtoken=None,
+                          use_pushbullet=None, pushbullet_notify_onsnatch=None, pushbullet_notify_ondownload=None, pushbullet_notify_ondownloadable=None, pushbullet_notify_onsubtitledownload=None, pushbullet_api=None, pushbullet_device=None, pushbullet_device_list=None,          
+                          use_email=None, email_notify_onsnatch=None, email_notify_ondownload=None, email_notify_ondownloadable=None, email_notify_onsubtitledownload=None, email_host=None, email_port=25, email_from=None,
                           email_tls=None, email_user=None, email_password=None, email_list=None, email_show_list=None, email_show=None ):
 
         results = []
@@ -1614,6 +1625,7 @@ class ConfigNotifications:
         sickbeard.USE_XBMC = config.checkbox_to_value(use_xbmc)
         sickbeard.XBMC_NOTIFY_ONSNATCH = config.checkbox_to_value(xbmc_notify_onsnatch)
         sickbeard.XBMC_NOTIFY_ONDOWNLOAD = config.checkbox_to_value(xbmc_notify_ondownload)
+        sickbeard.XBMC_NOTIFY_ONDOWNLOADABLE = config.checkbox_to_value(xbmc_notify_ondownloadable)
         sickbeard.XBMC_NOTIFY_ONSUBTITLEDOWNLOAD = config.checkbox_to_value(xbmc_notify_onsubtitledownload)
         sickbeard.XBMC_UPDATE_LIBRARY = config.checkbox_to_value(xbmc_update_library)
         sickbeard.XBMC_UPDATE_FULL = config.checkbox_to_value(xbmc_update_full)
@@ -1625,6 +1637,7 @@ class ConfigNotifications:
         sickbeard.USE_PLEX = config.checkbox_to_value(use_plex)
         sickbeard.PLEX_NOTIFY_ONSNATCH = config.checkbox_to_value(plex_notify_onsnatch)
         sickbeard.PLEX_NOTIFY_ONDOWNLOAD = config.checkbox_to_value(plex_notify_ondownload)
+        sickbeard.PLEX_NOTIFY_ONDOWNLOADABLE = config.checkbox_to_value(plex_notify_ondownloadable)
         sickbeard.PLEX_NOTIFY_ONSUBTITLEDOWNLOAD = config.checkbox_to_value(plex_notify_onsubtitledownload)
         sickbeard.PLEX_UPDATE_LIBRARY = config.checkbox_to_value(plex_update_library)
         sickbeard.PLEX_HOST = config.clean_hosts(plex_host)
@@ -1635,6 +1648,7 @@ class ConfigNotifications:
         sickbeard.USE_GROWL = config.checkbox_to_value(use_growl)
         sickbeard.GROWL_NOTIFY_ONSNATCH = config.checkbox_to_value(growl_notify_onsnatch)
         sickbeard.GROWL_NOTIFY_ONDOWNLOAD = config.checkbox_to_value(growl_notify_ondownload)
+        sickbeard.GROWL_NOTIFY_ONDOWNLOADABLE = config.checkbox_to_value(growl_notify_ondownloadable)
         sickbeard.GROWL_NOTIFY_ONSUBTITLEDOWNLOAD = config.checkbox_to_value(growl_notify_onsubtitledownload)
         sickbeard.GROWL_HOST = config.clean_host(growl_host, default_port=23053)
         sickbeard.GROWL_PASSWORD = growl_password
@@ -1642,6 +1656,7 @@ class ConfigNotifications:
         sickbeard.USE_PROWL = config.checkbox_to_value(use_prowl)
         sickbeard.PROWL_NOTIFY_ONSNATCH = config.checkbox_to_value(prowl_notify_onsnatch)
         sickbeard.PROWL_NOTIFY_ONDOWNLOAD = config.checkbox_to_value(prowl_notify_ondownload)
+        sickbeard.PROWL_NOTIFY_ONDOWNLOADABLE = config.checkbox_to_value(prowl_notify_ondownloadable)
         sickbeard.PROWL_NOTIFY_ONSUBTITLEDOWNLOAD = config.checkbox_to_value(prowl_notify_onsubtitledownload)
         sickbeard.PROWL_API = prowl_api
         sickbeard.PROWL_PRIORITY = prowl_priority
@@ -1649,23 +1664,27 @@ class ConfigNotifications:
         sickbeard.USE_TWITTER = config.checkbox_to_value(use_twitter)
         sickbeard.TWITTER_NOTIFY_ONSNATCH = config.checkbox_to_value(twitter_notify_onsnatch)
         sickbeard.TWITTER_NOTIFY_ONDOWNLOAD = config.checkbox_to_value(twitter_notify_ondownload)
+        sickbeard.TWITTER_NOTIFY_ONDOWNLOADABLE = config.checkbox_to_value(twitter_notify_ondownloadable)
         sickbeard.TWITTER_NOTIFY_ONSUBTITLEDOWNLOAD = config.checkbox_to_value(twitter_notify_onsubtitledownload)
 
         sickbeard.USE_BOXCAR = config.checkbox_to_value(use_boxcar)
         sickbeard.BOXCAR_NOTIFY_ONSNATCH = config.checkbox_to_value(boxcar_notify_onsnatch)
         sickbeard.BOXCAR_NOTIFY_ONDOWNLOAD = config.checkbox_to_value(boxcar_notify_ondownload)
+        sickbeard.BOXCAR_NOTIFY_ONDOWNLOADABLE = config.checkbox_to_value(boxcar_notify_ondownloadable)
         sickbeard.BOXCAR_NOTIFY_ONSUBTITLEDOWNLOAD = config.checkbox_to_value(boxcar_notify_onsubtitledownload)
         sickbeard.BOXCAR_USERNAME = boxcar_username
 
         sickbeard.USE_PUSHOVER = config.checkbox_to_value(use_pushover)
         sickbeard.PUSHOVER_NOTIFY_ONSNATCH = config.checkbox_to_value(pushover_notify_onsnatch)
         sickbeard.PUSHOVER_NOTIFY_ONDOWNLOAD = config.checkbox_to_value(pushover_notify_ondownload)
+        sickbeard.PUSHOVER_NOTIFY_ONDOWNLOADABLE = config.checkbox_to_value(pushover_notify_ondownloadable)
         sickbeard.PUSHOVER_NOTIFY_ONSUBTITLEDOWNLOAD = config.checkbox_to_value(pushover_notify_onsubtitledownload)
         sickbeard.PUSHOVER_USERKEY = pushover_userkey
 
         sickbeard.USE_LIBNOTIFY = config.checkbox_to_value(use_libnotify)
         sickbeard.LIBNOTIFY_NOTIFY_ONSNATCH = config.checkbox_to_value(libnotify_notify_onsnatch)
         sickbeard.LIBNOTIFY_NOTIFY_ONDOWNLOAD = config.checkbox_to_value(libnotify_notify_ondownload)
+        sickbeard.LIBNOTIFY_NOTIFY_ONDOWNLOADABLE = config.checkbox_to_value(libnotify_notify_ondownloadable)
         sickbeard.LIBNOTIFY_NOTIFY_ONSUBTITLEDOWNLOAD = config.checkbox_to_value(libnotify_notify_onsubtitledownload)
 
         sickbeard.USE_NMJ = config.checkbox_to_value(use_nmj)
@@ -1683,16 +1702,19 @@ class ConfigNotifications:
         sickbeard.USE_SYNOLOGYNOTIFIER = config.checkbox_to_value(use_synologynotifier)
         sickbeard.SYNOLOGYNOTIFIER_NOTIFY_ONSNATCH = config.checkbox_to_value(synologynotifier_notify_onsnatch)
         sickbeard.SYNOLOGYNOTIFIER_NOTIFY_ONDOWNLOAD = config.checkbox_to_value(synologynotifier_notify_ondownload)
+        sickbeard.SYNOLOGYNOTIFIER_NOTIFY_ONDOWNLOADABLE = config.checkbox_to_value(synologynotifier_notify_ondownloadable)
         sickbeard.SYNOLOGYNOTIFIER_NOTIFY_ONSUBTITLEDOWNLOAD = config.checkbox_to_value(synologynotifier_notify_onsubtitledownload)
 
         sickbeard.USE_TRAKT = config.checkbox_to_value(use_trakt)
         sickbeard.TRAKT_USERNAME = trakt_username
         sickbeard.TRAKT_PASSWORD = trakt_password
         sickbeard.TRAKT_API = trakt_api
+        sickbeard.TRAKT_REMOVE_SHOW_WATCHLIST = config.checkbox_to_value(trakt_remove_show_watchlist)
         sickbeard.TRAKT_REMOVE_WATCHLIST = config.checkbox_to_value(trakt_remove_watchlist)
         sickbeard.TRAKT_USE_WATCHLIST = config.checkbox_to_value(trakt_use_watchlist)
         sickbeard.TRAKT_METHOD_ADD = trakt_method_add
         sickbeard.TRAKT_START_PAUSED = config.checkbox_to_value(trakt_start_paused)
+        sickbeard.TRAKT_NUM_EP = config.to_int(trakt_num_ep)
 
         if sickbeard.USE_TRAKT:
             sickbeard.traktWatchListCheckerSchedular.silent = False
@@ -1702,6 +1724,7 @@ class ConfigNotifications:
         sickbeard.USE_EMAIL = config.checkbox_to_value(use_email)
         sickbeard.EMAIL_NOTIFY_ONSNATCH = config.checkbox_to_value(email_notify_onsnatch)
         sickbeard.EMAIL_NOTIFY_ONDOWNLOAD = config.checkbox_to_value(email_notify_ondownload)
+        sickbeard.EMAIL_NOTIFY_ONDOWNLOADABLE = config.checkbox_to_value(email_notify_ondownloadable)
         sickbeard.EMAIL_NOTIFY_ONSUBTITLEDOWNLOAD = config.checkbox_to_value(email_notify_onsubtitledownload)
         sickbeard.EMAIL_HOST = config.clean_host(email_host)
         sickbeard.EMAIL_PORT = config.to_int(email_port, default=25)
@@ -1714,6 +1737,7 @@ class ConfigNotifications:
         sickbeard.USE_PYTIVO = config.checkbox_to_value(use_pytivo)
         sickbeard.PYTIVO_NOTIFY_ONSNATCH = config.checkbox_to_value(pytivo_notify_onsnatch)
         sickbeard.PYTIVO_NOTIFY_ONDOWNLOAD = config.checkbox_to_value(pytivo_notify_ondownload)
+        sickbeard.PYTIVO_NOTIFY_ONDOWNLOADABLE = config.checkbox_to_value(pytivo_notify_ondownloadable)
         sickbeard.PYTIVO_NOTIFY_ONSUBTITLEDOWNLOAD = config.checkbox_to_value(pytivo_notify_onsubtitledownload)
         sickbeard.PYTIVO_UPDATE_LIBRARY = config.checkbox_to_value(pytivo_update_library)
         sickbeard.PYTIVO_HOST = config.clean_host(pytivo_host)
@@ -1723,6 +1747,7 @@ class ConfigNotifications:
         sickbeard.USE_NMA = config.checkbox_to_value(use_nma)
         sickbeard.NMA_NOTIFY_ONSNATCH = config.checkbox_to_value(nma_notify_onsnatch)
         sickbeard.NMA_NOTIFY_ONDOWNLOAD = config.checkbox_to_value(nma_notify_ondownload)
+        sickbeard.NMA_NOTIFY_ONDOWNLOADABLE = config.checkbox_to_value(nma_notify_ondownloadable)
         sickbeard.NMA_NOTIFY_ONSUBTITLEDOWNLOAD = config.checkbox_to_value(nma_notify_onsubtitledownload)
         sickbeard.NMA_API = nma_api
         sickbeard.NMA_PRIORITY = nma_priority
@@ -1730,12 +1755,14 @@ class ConfigNotifications:
         sickbeard.USE_PUSHALOT = config.checkbox_to_value(use_pushalot)
         sickbeard.PUSHALOT_NOTIFY_ONSNATCH = config.checkbox_to_value(pushalot_notify_onsnatch)
         sickbeard.PUSHALOT_NOTIFY_ONDOWNLOAD = config.checkbox_to_value(pushalot_notify_ondownload)
+        sickbeard.PUSHALOT_NOTIFY_ONDOWNLOADABLE = config.checkbox_to_value(pushalot_notify_ondownloadable)
         sickbeard.PUSHALOT_NOTIFY_ONSUBTITLEDOWNLOAD = config.checkbox_to_value(pushalot_notify_onsubtitledownload)
         sickbeard.PUSHALOT_AUTHORIZATIONTOKEN = pushalot_authorizationtoken
 
         sickbeard.USE_PUSHBULLET = config.checkbox_to_value(use_pushbullet)
         sickbeard.PUSHBULLET_NOTIFY_ONSNATCH = config.checkbox_to_value(pushbullet_notify_onsnatch)
         sickbeard.PUSHBULLET_NOTIFY_ONDOWNLOAD = config.checkbox_to_value(pushbullet_notify_ondownload)
+        sickbeard.PUSHBULLET_NOTIFY_ONDOWNLOADABLE = config.checkbox_to_value(pushbullet_notify_ondownloadable)
         sickbeard.PUSHBULLET_NOTIFY_ONSUBTITLEDOWNLOAD = config.checkbox_to_value(pushbullet_notify_onsubtitledownload)
         sickbeard.PUSHBULLET_API = pushbullet_api
         sickbeard.PUSHBULLET_DEVICE = pushbullet_device_list
@@ -1900,10 +1927,10 @@ class NewHomeAddShows:
         result = tvdb_api.Tvdb().config['valid_languages']
 
         # Make sure list is sorted alphabetically but 'en' is in front
-        if 'en' in result:
-            del result[result.index('en')]
+        if 'it' in result:
+            del result[result.index('it')]
         result.sort()
-        result.insert(0, 'en')
+        result.insert(0, 'it')
 
         return json.dumps({'results': result})
 
@@ -1912,9 +1939,9 @@ class NewHomeAddShows:
         return helpers.sanitizeFileName(name)
 
     @cherrypy.expose
-    def searchTVDBForShowName(self, name, lang="en"):
+    def searchTVDBForShowName(self, name, lang="it"):
         if not lang or lang == 'null':
-                lang = "en"
+                lang = "it"
 
         baseURL = "http://thetvdb.com/api/GetSeries.php?"
         nameUTF8 = name.encode('utf-8')
@@ -2735,6 +2762,7 @@ class Home:
         epCounts[Overview.GOOD] = 0
         epCounts[Overview.UNAIRED] = 0
         epCounts[Overview.SNATCHED] = 0
+        epCounts[Overview.DOWNLOADABLE] = 0
 
         for curResult in sqlResults:
                 
@@ -2822,6 +2850,7 @@ class Home:
         #If directCall from mass_edit_update no scene exceptions handling
         if directCall:
             do_update_exceptions = False
+            do_downloadable_search = False
         else:
             if set(exceptions_list) == set(showObj.exceptions):
                 do_update_exceptions = False
@@ -2831,6 +2860,10 @@ class Home:
         errors = []
         with showObj.lock:
             newQuality = Quality.combineQualities(map(int, anyQualities), map(int, bestQualities))
+            if newQuality != showObj.quality:
+               do_downloadable_search = True 
+            else:
+               do_downloadable_search = False
             showObj.quality = newQuality
 
             # reversed for now
@@ -2884,9 +2917,21 @@ class Home:
         if do_update_exceptions:
             try:
                 scene_exceptions.update_scene_exceptions(showObj.tvdbid, exceptions_list) # @UndefinedVariable
+                do_downloadable_search = True 
                 time.sleep(1)
             except exceptions.CantUpdateException, e:
                 errors.append("Unable to force an update on scene exceptions of the show.")
+
+        if do_downloadable_search:
+            try:
+                sickbeard.downloadableSearchScheduler.action.searchDownloadable([showObj]) #@UndefinedVariable
+                time.sleep(1)
+            except exceptions.CantUpdateException, e:
+                errors.append("Unable to force an update on the downloadable search.")
+
+        if not paused:
+           if not sickbeard.traktWatchListCheckerSchedular.action.updateWantedList():
+                errors.append("Unable to force an update on wanted episode")
 
         if directCall:
             return errors
@@ -3033,9 +3078,9 @@ class Home:
             else:
                 return _genericMessage("Error", errMsg)
 
-        segment_list = []
-        fail_segment = {}
-        
+        wanted_segments = []
+        failed_segments = {}
+
         if eps != None:
 
             for curEp in eps.split('|'):
@@ -3050,14 +3095,14 @@ class Home:
                     return _genericMessage("Error", "Episode couldn't be retrieved")
 
                 if int(status) in (WANTED, FAILED):
-                    # figure out what segment the episode is in and remember it so we can backlog it
+                    # figure out what episodes are wanted so we can backlog them
                     if epObj.show.air_by_date:
-                        ep_segment = str(epObj.airdate)[:7]
+                        wanted_segments.append(str(epObj.airdate)[:7])
                     else:
-                        ep_segment = epObj.season
+                        wanted_segments.append(epObj.season)
 
-                    if ep_segment not in segment_list:
-                        segment_list.append(ep_segment)
+                    # figure out what episodes failed so we can retry them
+                    failed_segments.setdefault(epObj.season,[]).append(epObj.episode)
 
                 with epObj.lock:
                     # don't let them mess up UNAIRED episodes
@@ -3072,44 +3117,46 @@ class Home:
                     if int(status) == FAILED and epObj.status not in Quality.SNATCHED + Quality.SNATCHED_PROPER + Quality.DOWNLOADED:
                         logger.log(u"Refusing to change status of " + curEp + " to FAILED because it's not SNATCHED/DOWNLOADED", logger.ERROR)
                         continue
-                   
-                    if int(status) == FAILED:
-                        quality = Quality.splitCompositeStatus(epObj.status)[1]
-                        epObj.status = Quality.compositeStatus(FAILED, quality)
-                        epObj.saveToDB()
-                        continue
-                   
+
                     epObj.status = int(status)
                     epObj.saveToDB()
-                
-        if int(status) == WANTED:           
+
+        if int(status) == WANTED:
             msg = "Backlog was automatically started for the following seasons of <b>" + showObj.name + "</b>:<br /><ul>"
-            for cur_segment in segment_list:
+            for cur_segment in wanted_segments:
                 msg += "<li>Season " + str(cur_segment) + "</li>"
                 logger.log(u"Sending backlog for " + showObj.name + " season " + str(cur_segment) + " because some eps were set to wanted")
                 cur_backlog_queue_item = search_queue.BacklogQueueItem(showObj, cur_segment)
                 sickbeard.searchQueueScheduler.action.add_item(cur_backlog_queue_item) # @UndefinedVariable
             msg += "</ul>"
+            #add episode to watchlist
+            if sickbeard.traktWatchListCheckerSchedular.action.refreshEpisodeWatchlist():
+                sickbeard.traktWatchListCheckerSchedular.action.addEpisodeToWatchList(showObj.tvdbid)
 
-            if segment_list:
+            if wanted_segments:
                 ui.notifications.message("Backlog started", msg)
 
+        if int(status) == SKIPPED:           
+            if sickbeard.traktWatchListCheckerSchedular.action.refreshEpisodeWatchlist():
+	        sickbeard.traktWatchListCheckerSchedular.action.removeEpisodeFromWatchList()
+
         if int(status) == FAILED:
-            msg = "Retring Search was automatically started for the following season of <b>" + showObj.name + "</b>:<br />"
-            for cur_segment in segment_list:
+            msg = "Retrying Search was automatically started for the following season of <b>" + showObj.name + "</b>:<br />"
+            for cur_segment in failed_segments:
                 msg += "<li>Season " + str(cur_segment) + "</li>"
                 logger.log(u"Retrying Search for " + showObj.name + " season " + str(cur_segment) + " because some eps were set to failed")
                 cur_failed_queue_item = search_queue.FailedQueueItem(showObj, cur_segment)
                 sickbeard.searchQueueScheduler.action.add_item(cur_failed_queue_item) # @UndefinedVariable
             msg += "</ul>"
 
-            if segment_list:
+            if failed_segments:
                 ui.notifications.message("Retry Search started", msg)
-            
+
         if direct:
             return json.dumps({'result': 'success'})
         else:
             redirect("/home/displayShow?show=" + show)
+
 
     @cherrypy.expose
     def testRename(self, show=None):
@@ -3261,7 +3308,7 @@ class Home:
 
     @cherrypy.expose
     def retryEpisode(self, show, season, episode):
-        
+
         # retrieve the episode object and fail if we can't get one
         ep_obj = _getEpisode(show, season, episode)
         if isinstance(ep_obj, str):
@@ -3273,7 +3320,7 @@ class Home:
             ep_obj.saveToDB()
 
         # make a queue item for it and put it on the queue
-        ep_queue_item = search_queue.FailedQueueItem(ep_obj.show, [], ep_obj)
+        ep_queue_item = search_queue.FailedQueueItem(ep_obj.show, {ep_obj.season: ep_obj.episode})
         sickbeard.searchQueueScheduler.action.add_item(ep_queue_item) # @UndefinedVariable
 
         # wait until the queue item tells us whether it worked or not

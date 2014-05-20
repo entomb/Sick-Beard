@@ -1,6 +1,7 @@
 #import sickbeard
 #from sickbeard.providers.generic import GenericProvider
 #from sickbeard.providers import thepiratebay
+#from sickbeard.providers import tntvillage
 #set global $title="Config - Providers"
 #set global $header="Search Providers"
 
@@ -115,7 +116,7 @@ var show_nzb_providers = #if $sickbeard.USE_NZBS then "true" else "false"#;
                                 <span class="component-title jumbo">Configure Provider:</span>
                                 <span class="component-desc">
                                     #set $provider_config_list = []
-                                    #for $cur_provider in ("thepiratebay", "tvtorrents", "btn", "torrentleech", "iptorrents", "omgwtfnzbs", "kickasstorrents", "sceneaccess", "hdbits", "nextgen", "speedcd", "binsearch"):
+                                    #for $cur_provider in ("thepiratebay", "tntvillage", "tvtorrents", "btn", "torrentleech", "iptorrents", "omgwtfnzbs", "kickasstorrents", "sceneaccess", "hdbits", "nextgen", "speedcd", "binsearch"):
                                         #set $cur_provider_obj = $sickbeard.providers.getProviderClass($cur_provider)
                                         #if $cur_provider_obj.providerType == $GenericProvider.NZB and not $sickbeard.USE_NZBS:
                                         	#continue
@@ -319,16 +320,47 @@ var show_nzb_providers = #if $sickbeard.USE_NZBS then "true" else "false"#;
                         </div>
 </div><!-- /sceneaccessDiv //-->
 
-<div class="providerDiv" id="hdtorrentsDiv">
+<div class="providerDiv" id="tntvillageDiv">
                         <div class="field-pair">
                             <label class="clearfix">
                                 <span class="component-title">Username:</span>
-                                <input class="component-desc" type="text" name="hdtorrents_username" value="$sickbeard.HDTORRENTS_USERNAME" size="40" />
+                                <input class="component-desc" type="text" name="tntvillage_username" value="$sickbeard.TNTVILLAGE_USERNAME" size="40" />
                             </label>
                         </div>
                         <div class="field-pair">
                             <label class="clearfix">
                                 <span class="component-title">Password:</span>
+                                <input class="component-desc" type="password" name="tntvillage_password" value="$sickbeard.TNTVILLAGE_PASSWORD" size="40" />
+                            </label>
+                        </div>
+                        <div class="field-pair">
+                            <label class="clearfix">
+                                <span class="component-title">Page Number:</span>
+                                <input class="component-desc" type="number" name="tntvillage_page" value="$sickbeard.TNTVILLAGE_PAGE" size="10" />
+                            </label>
+                        </div>
+                        <div class="field-pair">
+                            <label class="clearfix">
+                                <span class="component-title">Category:</span>
+                                    <select name="tntvillage_category" id="tntvillage_category">
+                                	#for $i in $tntvillage.category_dict.keys():
+                                  	<option value="$tntvillage.category_dict[$i]" #if $tntvillage.category_dict[$i] == $sickbeard.TNTVILLAGE_CATEGORY then "selected=\"selected\"" else ""#>$i</option>
+	                              	#end for
+                                    </select>
+			   </label>
+                        </div>
+                        <div class="field-pair">
+                            <input type="checkbox" name="tntvillage_subtitle" id=""tntvillage_subtitle"" #if $sickbeard.TNTVILLAGE_SUBTITLE then "checked=\"checked\"" else ""#/>
+                            <label class="clearfix" for=""tntvillage_subtitle"">
+                                <span class="component-title">Subtitled</span>
+                            </label>
+                        </div>
+</div><!-- /tntvillageDiv //-->
+<div class="providerDiv" id="hdtorrentsDiv">
+                        <div class="field-pair">
+                            <label class="clearfix">
+                                <span class="component-title">Username:</span>
+                                <input class="component-desc" type="text" name="hdtorrents_username" value="$sickbeard.HDTORRENTS_USERNAME" size="40" />
                                 <input class="component-desc" type="password" name="hdtorrents_password" value="$sickbeard.HDTORRENTS_PASSWORD" size="40" />
                             </label>
                         </div>
@@ -384,7 +416,7 @@ var show_nzb_providers = #if $sickbeard.USE_NZBS then "true" else "false"#;
                                 <input class="component-desc" type="text" name="hdbits_passkey" value="$sickbeard.HDBITS_PASSKEY" size="40" />
                             </label>
                         </div>
-                    </div><!-- /hdbitsDiv //-->   
+</div><!-- /hdbitsDiv //-->   
 
 <div class="providerDiv" id="speedcdDiv">
                         <div class="field-pair">

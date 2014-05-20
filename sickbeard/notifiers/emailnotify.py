@@ -104,6 +104,35 @@ class EmailNotifier:
               except Exception as e:
                   logger.log("Download notification ERROR: %s" % e, logger.ERROR)
 
+    def notify_downloadable(self, ep_name, title="Available:"):
+        """
+        Send a notification that an episode is Available
+
+        ep_name: The name of the episode that is Available
+        title: The title of the notification (optional)
+        """
+        if sickbeard.EMAIL_NOTIFY_ONDOWNLOADABLE:
+            show = self._parseEp(ep_name)
+            to = self._generate_recepients(show)
+            if len(to) == 0:
+                logger.log('Skipping email notify because there are no configured recepients', logger.WARNING)
+            else:
+              try:
+                  msg = MIMEMultipart('alternative')
+                  msg.attach(MIMEText("<body style='font-family:Helvetica, Arial, sans-serif;'><h3>Sick Beard Notification - Available</h3>\n<p>Show: <b>" + re.search("(.+?) -.+", ep_name).group(1) + "</b></p>\n<p>Episode: <b>" + re.search(".+ - (.+?-.+) -.+", ep_name).group(1) + "</b></p>\n\n<footer style='margin-top: 2.5em; padding: .7em 0; color: #777; border-top: #BBB solid 1px;'>Powered by Sick Beard.</footer></body>", 'html'))
+              except:
+                  msg = MIMEText(ep_name)
+
+              msg['Subject'] = 'Available: ' + ep_name
+              msg['From'] = sickbeard.EMAIL_FROM
+              msg['To'] = ','.join(to)
+
+              try:
+                  self._sendmail(sickbeard.EMAIL_HOST, sickbeard.EMAIL_PORT, sickbeard.EMAIL_FROM, sickbeard.EMAIL_TLS, sickbeard.EMAIL_USER, sickbeard.EMAIL_PASSWORD, to, msg)
+                  logger.log("Available notification sent to [%s] for '%s'" % (to, ep_name), logger.DEBUG)
+              except Exception as e:
+                  logger.log("Available notification ERROR: %s" % e, logger.ERROR)
+
     def notify_subtitle_download(self, ep_name, lang, title="Downloaded subtitle:"):
         """
         Send a notification that an subtitle was downloaded

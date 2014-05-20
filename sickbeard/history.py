@@ -83,3 +83,12 @@ def logSubtitle(showid, season, episode, status, subtitleResult):
     action = Quality.compositeStatus(SUBTITLED, quality)
        
     _logHistoryItem(action, showid, season, episode, quality, resource, provider)
+
+def logFailed(indexerid, season, episode, status, release, provider=None):
+    showid = int(indexerid)
+    season = int(season)
+    epNum = int(episode)
+    status, quality = Quality.splitCompositeStatus(status)
+    action = Quality.compositeStatus(FAILED, quality)
+
+    _logHistoryItem(action, showid, season, epNum, quality, release, provider)
